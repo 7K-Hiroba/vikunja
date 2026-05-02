@@ -1,0 +1,25 @@
+apiVersion: v2
+name: Vikunja
+description: Helm chart for Vikunja
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+maintainers:
+  - name: 7k-hiroba
+keywords:
+  - kubernetes
+  - hiroba
+home: https://github.com/7K-Hiroba/Vikunja
+sources:
+  - https://github.com/7K-Hiroba/Vikunja
+annotations:
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/links: |
+    - name: documentation
+      url: https://hiroba.7kgroup.org/docs/apps/Vikunja/helm-base
+    - name: source
+      url: https://github.com/7K-Hiroba/Vikunja
+    - name: support
+      url: https://github.com/7K-Hiroba/Vikunja/issues
+  artifacthub.io/maintainers: |
+    - name: 7k-hiroba

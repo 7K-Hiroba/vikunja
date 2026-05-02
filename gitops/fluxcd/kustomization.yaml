@@ -1,0 +1,28 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: Vikunja
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/part-of: hiroba
+spec:
+  interval: 10m
+  targetNamespace: Vikunja
+  sourceRef:
+    kind: GitRepository
+    name: Vikunja
+  path: ./helm/base
+  prune: true
+  wait: true
+  timeout: 5m
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: Vikunja
+  namespace: flux-system
+spec:
+  interval: 5m
+  url: https://github.com/7K-Hiroba/Vikunja.git
+  ref:
+    branch: main
