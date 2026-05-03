@@ -6,7 +6,7 @@ description: |-
   official vikunja/vikunja image. For databases, secrets, and observability,
   install the companion vikunja-platform chart.
 type: application
-version: 0.1.0
+version: 1.0.0
 # Tracks the upstream Vikunja image version. Renovate keeps this aligned with
 # helm/base/values.yaml's image.tag override (when set).
 appVersion: "0.24.6"
