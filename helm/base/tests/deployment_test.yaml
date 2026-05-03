@@ -12,12 +12,12 @@ tests:
 
   - it: uses the correct image
     set:
-      image.repository: ghcr.io/example/app
+      image.repository: ghcr.io/example/vikunja
       image.tag: "1.2.3"
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "ghcr.io/example/app:1.2.3"
+          value: "ghcr.io/example/vikunja:1.2.3"
 
   - it: falls back to appVersion when tag is empty
     set:
@@ -25,7 +25,7 @@ tests:
     asserts:
       - matchRegex:
           path: spec.template.spec.containers[0].image
-          pattern: ":0\\.1\\.0$"
+          pattern: ":0\\.24\\.6$"
 
   - it: omits replicas when autoscaling is enabled
     set:
@@ -62,45 +62,139 @@ tests:
       - isNotNull:
           path: spec.template.spec.containers[0].resources.requests
 
-  - it: sets container port from service.targetPort
-    set:
-      service.targetPort: 3000
+  - it: exposes Vikunja's container port (3456) by default
     asserts:
       - equal:
           path: spec.template.spec.containers[0].ports[0].containerPort
-          value: 3000
+          value: 3456
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: http
 
-  - it: renders env vars when set
+  - it: sets container port from service.targetPort
     set:
-      env:
-        - name: FOO
-          value: bar
+      service.targetPort: 8080
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8080
+
+  - it: probes target Vikunja's API info endpoint
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /api/v1/info
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /api/v1/info
+
+  - it: renders default Vikunja env vars
     asserts:
       - contains:
           path: spec.template.spec.containers[0].env
           content:
-            name: FOO
-            value: bar
+            name: VIKUNJA_DATABASE_TYPE
+            value: postgres
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_FILES_BASEPATH
+            value: /app/vikunja/files
 
-  - it: renders extra volumes and mounts
+  - it: renders custom env vars when set
     set:
-      extraVolumes:
-        - name: tmp
-          emptyDir: {}
-      extraVolumeMounts:
-        - name: tmp
-          mountPath: /tmp
+      env:
+        - name: VIKUNJA_LOG_LEVEL
+          value: DEBUG
     asserts:
       - contains:
-          path: spec.template.spec.volumes
+          path: spec.template.spec.containers[0].env
           content:
-            name: tmp
-            emptyDir: {}
+            name: VIKUNJA_LOG_LEVEL
+            value: DEBUG
+
+  - it: pulls envFrom Secret when configured
+    set:
+      envFrom:
+        - secretRef:
+            name: vikunja
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            secretRef:
+              name: vikunja
+
+  - it: omits envFrom when none configured
+    asserts:
+      - notExists:
+          path: spec.template.spec.containers[0].envFrom
+
+  - it: mounts /tmp and /app/vikunja/files by default
+    asserts:
       - contains:
           path: spec.template.spec.containers[0].volumeMounts
           content:
             name: tmp
             mountPath: /tmp
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: files
+            mountPath: /app/vikunja/files
+
+  - it: uses emptyDir for files when persistence is disabled
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: files
+            emptyDir: {}
+
+  - it: uses managed PVC for files when persistence is enabled
+    set:
+      persistence.files.enabled: true
+    release:
+      name: prod
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: files
+            persistentVolumeClaim:
+              claimName: prod-vikunja-files
+
+  - it: uses existingClaim when set
+    set:
+      persistence.files.enabled: true
+      persistence.files.existingClaim: my-vikunja-pvc
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: files
+            persistentVolumeClaim:
+              claimName: my-vikunja-pvc
+
+  - it: renders extra volumes and mounts alongside the defaults
+    set:
+      extraVolumes:
+        - name: cache
+          emptyDir: {}
+      extraVolumeMounts:
+        - name: cache
+          mountPath: /cache
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: cache
+            emptyDir: {}
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: cache
+            mountPath: /cache
 
   - it: renders pod annotations
     set:
@@ -108,5 +202,5 @@ tests:
         prometheus.io/scrape: "true"
     asserts:
       - equal:
-          path: spec.template.metadata.annotations.prometheus\.io/scrape
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
           value: "true"

@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
 
 permissions:
-      contents: write
-      pull-requests: write
+  contents: write
+  pull-requests: write
 
 jobs:
   bootstrap:
@@ -16,10 +16,10 @@ jobs:
       charts: |
         [
           { "file": "helm/base-artifacthub-repo.yml",
-            "chart": "Vikunja",
+            "chart": "vikunja",
             "displayName": "Vikunja" },
           { "file": "helm/platform-artifacthub-repo.yml",
-            "chart": "Vikunja-platform",
+            "chart": "vikunja-platform",
             "displayName": "Vikunja — Platform" }
         ]
     secrets: inherit

@@ -13,9 +13,6 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     outputs:
-      app--release_created: ${{ steps.release.outputs['app--release_created'] }}
-      app--tag_name: ${{ steps.release.outputs['app--tag_name'] }}
-      app--version: ${{ steps.release.outputs['app--version'] }}
       helm-base--release_created: ${{ steps.release.outputs['helm/base--release_created'] }}
       helm-base--tag_name: ${{ steps.release.outputs['helm/base--tag_name'] }}
       helm-base--version: ${{ steps.release.outputs['helm/base--version'] }}
@@ -33,16 +30,6 @@ jobs:
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-
-  publish-app:
-    needs: release-please
-    if: needs.release-please.outputs.app--release_created == 'true'
-    uses: 7K-Hiroba/workflows-library/.github/workflows/release-app.yml@v1
-    with:
-      image-name: Vikunja
-      path: .
-      version: ${{ needs.release-please.outputs.app--version }}
-    secrets: inherit
 
   publish-helm-base:
     needs: release-please
@@ -102,7 +89,7 @@ jobs:
     uses: 7K-Hiroba/workflows-library/.github/workflows/release-artifacthub-metadata.yml@v1
     with:
       file: helm/base-artifacthub-repo.yml
-      chart: Vikunja
+      chart: vikunja
     secrets: inherit
 
   publish-artifacthub-platform:
@@ -111,6 +98,5 @@ jobs:
     uses: 7K-Hiroba/workflows-library/.github/workflows/release-artifacthub-metadata.yml@v1
     with:
       file: helm/platform-artifacthub-repo.yml
-      chart: Vikunja-platform
+      chart: vikunja-platform
     secrets: inherit
-

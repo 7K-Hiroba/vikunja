@@ -1,8 +1,11 @@
+# Pull Request
+
 ## Summary
 
 <!-- Brief description of the changes -->
 
 ## Type of Change
+
 - [ ] Update to existing chart
 - [ ] Documentation
 - [ ] CI/CD / infrastructure
@@ -18,6 +21,7 @@
 ## Testing
 
 <!-- How were these changes tested? -->
+
 - [ ] Deployed and tested on a cluster
 - [ ] Documentation reviewed for accuracy
 - [ ] N/A

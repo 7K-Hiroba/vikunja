@@ -1,13 +1,15 @@
 # Vikunja
 
-Vikunja
+[Vikunja](https://vikunja.io) — open-source, self-hostable to-do and project management app — packaged for the [Hiroba](https://github.com/7K-Hiroba/Hiroba) ecosystem.
+
+The chart deploys the official `vikunja/vikunja` container image; only the chart and platform wiring are custom.
 
 ## Structure
 
-```
+```text
 ├── helm/
-│   ├── base/           # Core k8s resources (Deployment, Service, Ingress)
-│   └── platform/       # Platform dependencies with provider switching
+│   ├── base/           # Vikunja workload (Deployment, Service, HTTPRoute, PVC)
+│   └── platform/       # CNPG Postgres, ExternalSecrets, ServiceMonitor, alerts
 ├── compositions/
 │   └── crossplane/     # App-specific Crossplane compositions (XRDs, Compositions)
 ├── gitops/
@@ -15,26 +17,30 @@ Vikunja
 │   └── fluxcd/         # FluxCD Kustomization manifests
 ├── docs/               # TechDocs content
 ├── .github/workflows/  # CI/CD (references 7K-Hiroba/workflows-library)
-├── Dockerfile
 └── catalog-info.yaml   # Backstage catalog entry
 ```
 
-## Quick Start
+## Quick start
 
 ```bash
-# Build the container image
-docker build -t Vikunja:dev .
+# Workload
+helm install vikunja ./helm/base
 
-# Deploy base application
-helm install Vikunja ./helm/base
-
-# Deploy platform dependencies (optional)
-helm install Vikunja-platform ./helm/platform
+# Platform dependencies (Postgres, ExternalSecrets, observability) — optional
+helm install vikunja-platform ./helm/platform \
+  --set postgres.enabled=true \
+  --set externalSecrets.enabled=true
 ```
+
+For a working install with the platform chart's defaults you'll also need:
+
+- A `Gateway` resource the [`HTTPRoute`](helm/base/templates/httproute.yaml) can attach to
+- The CloudNativePG operator (for `postgres.enabled=true`)
+- A `ClusterSecretStore` with entries at `vikunja/postgres` and `vikunja/service`
 
 ## Documentation
 
-Full documentation is available at [hiroba.7kgroup.org/apps/Vikunja](https://hiroba.7kgroup.org/apps/Vikunja), or locally under `docs/`.
+Full documentation is available at [hiroba.7kgroup.org/apps/vikunja](https://hiroba.7kgroup.org/apps/vikunja), or locally under [docs/](docs/).
 
 ## Part of the Hiroba ecosystem
 

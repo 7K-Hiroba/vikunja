@@ -1,10 +1,15 @@
-# Default values for Vikunja
+# Default values for vikunja
+# Vikunja: open-source, self-hostable to-do app — https://vikunja.io
 
+# Single replica is the safe default — Vikunja stores uploaded files on disk
+# (see persistence.files below). Scaling beyond 1 requires either an RWX
+# volume or a sync mechanism for /app/vikunja/files.
 replicaCount: 1
 
 image:
-  repository: ghcr.io/7k-hiroba/Vikunja
+  repository: vikunja/vikunja
   pullPolicy: IfNotPresent
+  # Overrides Chart.appVersion. Pin this in production.
   tag: ""
 
 imagePullSecrets: []
@@ -18,6 +23,8 @@ serviceAccount:
 
 podAnnotations: {}
 
+# Vikunja's container runs as UID 1000 and writes only to mounted volumes,
+# so readOnlyRootFilesystem is honoured.
 podSecurityContext:
   runAsNonRoot: true
   runAsUser: 1000
@@ -33,71 +40,101 @@ securityContext:
 service:
   type: ClusterIP
   port: 80
-  targetPort: 8080
+  # Vikunja serves the API and frontend on port 3456 inside the container.
+  targetPort: 3456
 
 gateway:
   enabled: true
   annotations: {}
-  # -- Parent Gateway references
   parentRefs:
     - name: default-gateway
       # namespace: gateway-system
       # sectionName: https
-  # -- Hostnames to match
   hostnames:
-    - myapp.example.com
-  # -- Routing rules (omit for a simple catch-all route to the service)
+    - vikunja.example.com
+  # Empty rules → render a default catch-all PathPrefix `/` route.
   rules: []
-  #  - matches:
-  #      - path:
-  #          type: PathPrefix
-  #          value: /api
-  #    filters:
-  #      - type: RequestHeaderModifier
-  #        requestHeaderModifier:
-  #          add:
-  #            - name: X-Forwarded-Prefix
-  #              value: /api
 
 resources:
   limits:
     cpu: 500m
-    memory: 256Mi
+    memory: 512Mi
   requests:
     cpu: 100m
     memory: 128Mi
 
 livenessProbe:
   httpGet:
-    path: /healthz
+    path: /api/v1/info
     port: http
   initialDelaySeconds: 10
   periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
 
 readinessProbe:
   httpGet:
-    path: /readyz
+    path: /api/v1/info
     port: http
   initialDelaySeconds: 5
-  periodSeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
 
+# Autoscaling is OFF by default. Enabling it without RWX file storage causes
+# file-upload inconsistency between replicas.
 autoscaling:
   enabled: false
   minReplicas: 1
   maxReplicas: 10
   targetCPUUtilizationPercentage: 80
 
-# -- Pod Disruption Budget. Only meaningful when running more than one replica
-# (replicaCount > 1 or autoscaling.enabled).
 podDisruptionBudget:
   enabled: false
-  # -- Exactly one of minAvailable or maxUnavailable should be set
   minAvailable: 1
   # maxUnavailable: 1
+
+# Persistent storage for Vikunja's uploaded files. When disabled the chart
+# falls back to an emptyDir and uploads are lost on pod restart.
+persistence:
+  files:
+    enabled: false
+    size: 5Gi
+    accessMode: ReadWriteOnce
+    storageClass: ""
+    # Reuse an existing PVC instead of letting the chart create one.
+    existingClaim: ""
+
+# Vikunja config is supplied as environment variables — see
+# https://vikunja.io/docs/config-options/ for the full reference. The
+# defaults below assume the companion platform chart has provisioned the
+# CNPG cluster (service `vikunja-pg-rw`) and an ExternalSecret named
+# `vikunja` carrying VIKUNJA_DATABASE_PASSWORD and VIKUNJA_SERVICE_JWTSECRET.
+env:
+  - name: VIKUNJA_SERVICE_PUBLICURL
+    value: "https://vikunja.example.com"
+  - name: VIKUNJA_SERVICE_ENABLEMETRICS
+    value: "true"
+  - name: VIKUNJA_DATABASE_TYPE
+    value: postgres
+  - name: VIKUNJA_DATABASE_HOST
+    value: vikunja-pg-rw
+  - name: VIKUNJA_DATABASE_USER
+    value: vikunja
+  - name: VIKUNJA_DATABASE_DATABASE
+    value: vikunja
+  - name: VIKUNJA_DATABASE_SSLMODE
+    value: require
+  - name: VIKUNJA_FILES_BASEPATH
+    value: /app/vikunja/files
+
+# Pull non-public values (DB password, JWT secret, mailer password) from
+# Secrets — typically the one created by the platform chart's ExternalSecret.
+envFrom: []
+#  - secretRef:
+#      name: vikunja
 
 nodeSelector: {}
 tolerations: []
 affinity: {}
-env: []
 extraVolumes: []
 extraVolumeMounts: []

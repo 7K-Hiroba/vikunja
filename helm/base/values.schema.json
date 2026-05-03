@@ -133,7 +133,10 @@
           }
         },
         "initialDelaySeconds": { "type": "integer", "minimum": 0 },
-        "periodSeconds": { "type": "integer", "minimum": 1 }
+        "periodSeconds": { "type": "integer", "minimum": 1 },
+        "timeoutSeconds": { "type": "integer", "minimum": 1 },
+        "failureThreshold": { "type": "integer", "minimum": 1 },
+        "successThreshold": { "type": "integer", "minimum": 1 }
       }
     },
     "readinessProbe": {
@@ -147,7 +150,10 @@
           }
         },
         "initialDelaySeconds": { "type": "integer", "minimum": 0 },
-        "periodSeconds": { "type": "integer", "minimum": 1 }
+        "periodSeconds": { "type": "integer", "minimum": 1 },
+        "timeoutSeconds": { "type": "integer", "minimum": 1 },
+        "failureThreshold": { "type": "integer", "minimum": 1 },
+        "successThreshold": { "type": "integer", "minimum": 1 }
       }
     },
     "autoscaling": {
@@ -169,10 +175,67 @@
       },
       "additionalProperties": false
     },
+    "persistence": {
+      "type": "object",
+      "properties": {
+        "files": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "size": { "type": "string", "pattern": "^[0-9]+(Mi|Gi|Ti)$" },
+            "accessMode": {
+              "type": "string",
+              "enum": ["ReadWriteOnce", "ReadWriteMany", "ReadOnlyMany", "ReadWriteOncePod"]
+            },
+            "storageClass": { "type": "string" },
+            "existingClaim": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
     "nodeSelector": { "type": "object" },
     "tolerations": { "type": "array" },
     "affinity": { "type": "object" },
-    "env": { "type": "array" },
+    "env": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "value": { "type": ["string", "integer", "boolean"] },
+          "valueFrom": { "type": "object" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "envFrom": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "secretRef": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": { "type": "string" },
+              "optional": { "type": "boolean" }
+            }
+          },
+          "configMapRef": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": { "type": "string" },
+              "optional": { "type": "boolean" }
+            }
+          },
+          "prefix": { "type": "string" }
+        }
+      }
+    },
     "extraVolumes": { "type": "array" },
     "extraVolumeMounts": { "type": "array" }
   },

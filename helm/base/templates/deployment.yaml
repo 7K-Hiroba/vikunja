@@ -51,14 +51,31 @@ spec:
           env:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.extraVolumeMounts }}
-          volumeMounts:
+          {{- with .Values.envFrom }}
+          envFrom:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- with .Values.extraVolumes }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: files
+              mountPath: /app/vikunja/files
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
       volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: files
+          {{- if .Values.persistence.files.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.files.existingClaim | default (printf "%s-files" (include "app.fullname" .)) }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- with .Values.extraVolumes }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

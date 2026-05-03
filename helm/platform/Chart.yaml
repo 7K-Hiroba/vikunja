@@ -1,28 +1,35 @@
 apiVersion: v2
-name: Vikunja-platform
-description: Platform dependencies for Vikunja — provisions databases, storage, and identity resources
+name: vikunja-platform
+description: |-
+  Platform dependencies for the vikunja chart — provisions the cross-cutting
+  resources Vikunja needs but that aren't part of its workload lifecycle:
+  PostgreSQL (CNPG), ExternalSecrets, and observability (ServiceMonitor,
+  Grafana dashboard, PrometheusRule).
 type: application
 version: 0.1.0
-appVersion: "0.1.0"
+appVersion: "0.24.6"
 maintainers:
   - name: 7k-hiroba
 keywords:
+  - vikunja
   - platform
   - crossplane
   - cnpg
   - hiroba
-home: https://github.com/7K-Hiroba/Vikunja
+home: https://github.com/7K-Hiroba/vikunja
 sources:
-  - https://github.com/7K-Hiroba/Vikunja
+  - https://github.com/7K-Hiroba/vikunja
+  - https://vikunja.io
+icon: https://vikunja.io/images/vikunja-logo.svg
 annotations:
-  artifacthub.io/category: monitoring-logging
   artifacthub.io/license: Apache-2.0
+  artifacthub.io/category: productivity
   artifacthub.io/links: |
     - name: documentation
-      url: https://hiroba.7kgroup.org/docs/apps/Vikunja/helm-platform
+      url: https://hiroba.7kgroup.org/docs/apps/vikunja/helm-platform
     - name: source
-      url: https://github.com/7K-Hiroba/Vikunja
+      url: https://github.com/7K-Hiroba/vikunja
     - name: support
-      url: https://github.com/7K-Hiroba/Vikunja/issues
+      url: https://github.com/7K-Hiroba/vikunja/issues
   artifacthub.io/maintainers: |
     - name: 7k-hiroba
