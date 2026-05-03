@@ -1,49 +1,57 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    ":semanticCommits"
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: [
+    'config:recommended',
+    ':semanticCommits',
   ],
-
-  "customManagers": [
+  customManagers: [
     {
-      "customType": "regex",
-      "description": "Container image references in Helm values (imageName field)",
-      "fileMatch": ["helm/.+/values\\.yaml$"],
-      "matchStrings": [
-        "imageName:\\s*(?<depName>[^:]+):(?<currentValue>[^\\s]+)"
+      customType: 'regex',
+      description: 'Container image references in Helm values (imageName field)',
+      managerFilePatterns: [
+        '/helm/.+/values\\.yaml$/',
       ],
-      "datasourceTemplate": "docker"
+      matchStrings: [
+        'imageName:\\s*(?<depName>[^:]+):(?<currentValue>[^\\s]+)',
+      ],
+      datasourceTemplate: 'docker',
     },
     {
-      "customType": "regex",
-      "description": "Vikunja container image in helm/base values (repository + tag)",
-      "fileMatch": ["helm/base/values\\.yaml$"],
-      "matchStrings": [
-        "repository:\\s*(?<depName>vikunja/vikunja)\\s*\\n\\s*pullPolicy:[^\\n]*\\s*\\n\\s*tag:\\s*\"?(?<currentValue>[^\"\\s]+)\"?"
+      customType: 'regex',
+      description: 'Vikunja container image in helm/base values (repository + tag)',
+      managerFilePatterns: [
+        '/helm/base/values\\.yaml$/',
       ],
-      "datasourceTemplate": "docker"
-    }
+      matchStrings: [
+        'repository:\\s*(?<depName>vikunja/vikunja)\\s*\\n\\s*pullPolicy:[^\\n]*\\s*\\n\\s*tag:\\s*"?(?<currentValue>[^"\\s]+)"?',
+      ],
+      datasourceTemplate: 'docker',
+    },
   ],
-
-  "packageRules": [
+  packageRules: [
     {
-      "description": "Group GitHub Actions updates",
-      "matchManagers": ["github-actions"],
-      "groupName": "github-actions",
-      "semanticCommitType": "ci"
+      description: 'Group GitHub Actions updates',
+      matchManagers: [
+        'github-actions',
+      ],
+      groupName: 'github-actions',
+      semanticCommitType: 'ci',
     },
     {
-      "description": "Vikunja image bumps land in helm-base",
-      "matchPackageNames": ["vikunja/vikunja"],
-      "semanticCommitType": "fix",
-      "semanticCommitScope": "helm-base"
+      description: 'Vikunja image bumps land in helm-base',
+      matchPackageNames: [
+        'vikunja/vikunja',
+      ],
+      semanticCommitType: 'fix',
+      semanticCommitScope: 'helm-base',
     },
     {
-      "description": "Platform chart dependency updates",
-      "matchFileNames": ["helm/platform/**"],
-      "semanticCommitType": "fix",
-      "semanticCommitScope": "helm-platform"
-    }
-  ]
+      description: 'Platform chart dependency updates',
+      matchFileNames: [
+        'helm/platform/**',
+      ],
+      semanticCommitType: 'fix',
+      semanticCommitScope: 'helm-platform',
+    },
+  ],
 }
