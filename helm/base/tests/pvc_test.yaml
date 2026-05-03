@@ -1,0 +1,52 @@
+suite: Files PVC
+templates:
+  - templates/pvc.yaml
+tests:
+  - it: is not created when persistence is disabled
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: is not created when an existingClaim is provided
+    set:
+      persistence.files.enabled: true
+      persistence.files.existingClaim: my-pvc
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders when persistence is enabled
+    set:
+      persistence.files.enabled: true
+    release:
+      name: prod
+    asserts:
+      - isKind:
+          of: PersistentVolumeClaim
+      - equal:
+          path: metadata.name
+          value: prod-vikunja-files
+      - equal:
+          path: spec.accessModes[0]
+          value: ReadWriteOnce
+      - equal:
+          path: spec.resources.requests.storage
+          value: 5Gi
+
+  - it: applies size, accessMode, and storageClass overrides
+    set:
+      persistence.files:
+        enabled: true
+        size: 50Gi
+        accessMode: ReadWriteMany
+        storageClass: fast-ssd
+    asserts:
+      - equal:
+          path: spec.resources.requests.storage
+          value: 50Gi
+      - equal:
+          path: spec.accessModes[0]
+          value: ReadWriteMany
+      - equal:
+          path: spec.storageClassName
+          value: fast-ssd

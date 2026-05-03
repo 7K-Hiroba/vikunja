@@ -1,13 +1,21 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: Vikunja
-  description: Vikunja
+  name: vikunja
+  description: Self-hostable to-do and project management app
   annotations:
-    github.com/project-slug: 7K-Hiroba/Vikunja
-    backstage.io/docs-url: https://hiroba.7kgroup.org/Vikunja
+    github.com/project-slug: 7K-Hiroba/vikunja
+    backstage.io/docs-url: https://hiroba.7kgroup.org/vikunja
+  links:
+    - url: https://vikunja.io
+      title: Upstream project
+    - url: https://artifacthub.io/packages/helm/vikunja/vikunja
+      title: Upstream Helm chart
   tags:
     - kubernetes
+    - vikunja
+    - todo
+    - self-hosted
 spec:
   type: service
   lifecycle: experimental

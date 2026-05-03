@@ -1,25 +1,41 @@
 apiVersion: v2
-name: Vikunja
-description: Helm chart for Vikunja
+name: vikunja
+description: |-
+  Vikunja — open-source, self-hostable to-do and project management app.
+  This chart deploys the workload (Deployment, Service, HTTPRoute) using the
+  official vikunja/vikunja image. For databases, secrets, and observability,
+  install the companion vikunja-platform chart.
 type: application
 version: 0.1.0
-appVersion: "0.1.0"
+# Tracks the upstream Vikunja image version. Renovate keeps this aligned with
+# helm/base/values.yaml's image.tag override (when set).
+appVersion: "0.24.6"
 maintainers:
   - name: 7k-hiroba
 keywords:
+  - vikunja
+  - todo
+  - task-tracker
+  - project-management
+  - self-hosted
   - kubernetes
   - hiroba
-home: https://github.com/7K-Hiroba/Vikunja
+home: https://github.com/7K-Hiroba/vikunja
 sources:
-  - https://github.com/7K-Hiroba/Vikunja
+  - https://github.com/7K-Hiroba/vikunja
+  - https://vikunja.io
+icon: https://vikunja.io/images/vikunja-logo.svg
 annotations:
   artifacthub.io/license: Apache-2.0
+  artifacthub.io/category: productivity
   artifacthub.io/links: |
     - name: documentation
-      url: https://hiroba.7kgroup.org/docs/apps/Vikunja/helm-base
+      url: https://hiroba.7kgroup.org/docs/apps/vikunja/helm-base
     - name: source
-      url: https://github.com/7K-Hiroba/Vikunja
+      url: https://github.com/7K-Hiroba/vikunja
     - name: support
-      url: https://github.com/7K-Hiroba/Vikunja/issues
+      url: https://github.com/7K-Hiroba/vikunja/issues
+    - name: upstream
+      url: https://vikunja.io
   artifacthub.io/maintainers: |
     - name: 7k-hiroba

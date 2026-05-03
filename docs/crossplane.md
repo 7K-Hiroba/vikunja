@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 4
 ---
 
 # Crossplane compositions
@@ -8,11 +8,13 @@ This directory hosts Crossplane Composite Resource Definitions (XRDs) and Compos
 
 Use this stack when your application exposes infrastructure capabilities that other applications can consume. For example, a Keycloak deployment might publish compositions that let other apps provision realms and clients via Claims.
 
-Values reference: [`compositions/crossplane/`](https://github.com/7KGroup/Vikunja/tree/main/compositions/crossplane)
+Values reference: [`compositions/crossplane/`](https://github.com/7K-Hiroba/vikunja/tree/main/compositions/crossplane)
+
+> Vikunja itself does not currently expose any Crossplane compositions — it is a leaf application that only consumes infrastructure. This page documents the convention for future contributors who want to publish XRDs (e.g. for delegated project provisioning).
 
 ## Structure
 
-```
+```text
 compositions/crossplane/
 ├── xrd-<resource>.yaml           # CompositeResourceDefinition
 ├── composition-<resource>.yaml   # Composition (maps XRD to managed resources)

@@ -1,0 +1,78 @@
+suite: PrometheusRule
+templates:
+  - templates/observability/prometheus-rules.yaml
+capabilities:
+  apiVersions:
+    - monitoring.coreos.com/v1
+tests:
+  - it: is not created when disabled
+    set:
+      observability.prometheusRules.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders when enabled
+    set:
+      observability.prometheusRules.enabled: true
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - equal:
+          path: apiVersion
+          value: monitoring.coreos.com/v1
+
+  - it: ships the default Vikunja alerts
+    set:
+      observability.prometheusRules.enabled: true
+    asserts:
+      - matchRegex:
+          path: spec.groups[0].rules[0].alert
+          pattern: ^Vikunja
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: VikunjaTargetDown
+          any: true
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: VikunjaHighErrorRate
+          any: true
+      - contains:
+          path: spec.groups[0].rules
+          content:
+            alert: VikunjaHighLatency
+          any: true
+
+  - it: scopes alerts to the release namespace
+    release:
+      namespace: prod-vikunja
+    set:
+      observability.prometheusRules.enabled: true
+    asserts:
+      - matchRegex:
+          path: spec.groups[0].rules[0].expr
+          pattern: 'namespace="prod-vikunja"'
+
+  - it: allows full override of groups
+    set:
+      observability.prometheusRules:
+        enabled: true
+        groups:
+          - name: custom
+            rules:
+              - alert: MyAlert
+                expr: vector(1)
+                for: 1m
+                labels:
+                  severity: info
+                annotations:
+                  summary: hello
+    asserts:
+      - equal:
+          path: spec.groups[0].name
+          value: custom
+      - equal:
+          path: spec.groups[0].rules[0].alert
+          value: MyAlert
