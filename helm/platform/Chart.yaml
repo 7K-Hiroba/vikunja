@@ -23,7 +23,6 @@ sources:
 icon: https://vikunja.io/images/vikunja-logo.svg
 annotations:
   artifacthub.io/license: Apache-2.0
-  artifacthub.io/category: productivity
   artifacthub.io/links: |
     - name: documentation
       url: https://hiroba.7kgroup.org/docs/apps/vikunja/helm-platform
