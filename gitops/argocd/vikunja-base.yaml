@@ -1,0 +1,62 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vikunja-base
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: hiroba
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: vikunja
+  source:
+    repoURL: https://github.com/7K-Hiroba/vikunja.git
+    targetRevision: HEAD
+    path: helm/base
+    helm:
+      valuesObject:
+        replicaCount: 1
+        image:
+          repository: vikunja/vikunja
+          pullPolicy: IfNotPresent
+        gateway:
+          enabled: true
+          parentRefs:
+            - name: default-gateway
+          hostnames:
+            - vikunja.example.com
+        persistence:
+          files:
+            enabled: true
+            size: 5Gi
+            accessMode: ReadWriteOnce
+        env:
+          - name: VIKUNJA_SERVICE_PUBLICURL
+            value: "https://vikunja.example.com"
+          - name: VIKUNJA_SERVICE_ENABLEMETRICS
+            value: "true"
+          - name: VIKUNJA_DATABASE_TYPE
+            value: postgres
+          - name: VIKUNJA_DATABASE_HOST
+            value: vikunja-pg-rw
+          - name: VIKUNJA_DATABASE_USER
+            value: vikunja
+          - name: VIKUNJA_DATABASE_DATABASE
+            value: vikunja
+          - name: VIKUNJA_DATABASE_SSLMODE
+            value: require
+          - name: VIKUNJA_FILES_BASEPATH
+            value: /app/vikunja/files
+        envFrom:
+          - secretRef:
+              name: vikunja
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: vikunja
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

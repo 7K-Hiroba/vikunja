@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: vikunja
+  namespace: argocd
+spec:
+  sourceRepos:
+    - https://github.com/7K-Hiroba/vikunja.git
+  destinations:
+    - namespace: vikunja
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace

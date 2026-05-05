@@ -47,6 +47,12 @@ postgres:
     enabled: false
     schedule: "0 2 * * *"
     retentionPolicy: "7d"
+    garage:
+      endpoint: "http://garage.garage.svc.cluster.local:3900"
+      credentialsSecret:
+        name: ""
+        accessKeyKey: accessKey
+        secretKeyKey: secretKey
 
 # -- S3-compatible object storage. Disabled by default — Vikunja stores
 # uploaded files on the workload pod's filesystem (see persistence.files in
