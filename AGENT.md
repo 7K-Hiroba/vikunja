@@ -75,6 +75,21 @@ If this application exposes infrastructure that other apps can consume (e.g., a 
 
 ArgoCD and FluxCD manifests live under `gitops/`. There are separate manifests for base and platform charts because they have different lifecycles — the base chart deploys frequently, platform resources change rarely.
 
+```text
+gitops/
+├── values-base.yaml              # Baseline Helm overrides for helm/base
+├── values-platform.yaml          # Baseline Helm overrides for helm/platform
+├── argocd/
+│   ├── project.yaml              # AppProject scoping source repos and namespace
+│   └── application.yaml          # <app>-base (auto-sync) + <app>-platform (manual)
+└── fluxcd/
+    ├── git-repository.yaml       # GitRepository source
+    ├── helmrelease-base.yaml     # HelmRelease for helm/base
+    └── helmrelease-platform.yaml # HelmRelease for helm/platform
+```
+
+Edit `values-base.yaml` and `values-platform.yaml` to set hostnames, resource limits, and feature flags. When deploying via a stack repo, copy these files into the stack's `apps/<app>/` directory.
+
 ### Documentation
 
 All docs go under `docs/` and are published via Docusaurus. Keep docs in Markdown.
@@ -192,6 +207,38 @@ Package rules group related updates into single PRs:
 | (ungrouped) | Platform chart image updates | `fix(helm-platform):` |
 
 When Renovate opens a PR for a Dockerfile base image update, verify the new image is compatible with your build and runtime requirements. Helm values image updates (e.g., PostgreSQL) should be tested on a cluster before merging.
+
+## OpenCode Skills
+
+Agent skills for this repository are maintained centrally in the [Hiroba](https://github.com/7K-Hiroba/Hiroba) repo under `.opencode/skills/`. Skills enforce standards when editing charts, Dockerfiles, GitOps manifests, and documentation.
+
+To install them locally so they are available when working in this repo:
+
+```bash
+git clone https://github.com/7K-Hiroba/Hiroba /tmp/hiroba
+mkdir -p .opencode/skills
+for skill in /tmp/hiroba/.opencode/skills/*/; do
+  ln -sf "$skill" .opencode/skills/
+done
+```
+
+Available skills and when they apply:
+
+| Skill | Use when… |
+| --- | --- |
+| `helm-base` | Editing `helm/base/` templates, values, or schema |
+| `helm-platform` | Editing `helm/platform/` templates, values, or schema |
+| `cnpg-cluster` | Adding or modifying a CNPG `Cluster` resource |
+| `crossplane-s3` | Adding or modifying S3 storage resources |
+| `garage-s3` | Working with the Garage S3 provider specifically |
+| `external-secrets` | Adding or modifying `ExternalSecret` resources |
+| `observability` | Adding or modifying ServiceMonitor, PrometheusRules, or Grafana dashboards |
+| `gitops` | Editing ArgoCD or FluxCD manifests under `gitops/` |
+| `helm-chart-release` | Preparing a chart release, writing commit messages, versioning |
+| `dockerfile` | Creating or modifying a `Dockerfile` |
+| `documentation` | Creating or editing Markdown files under `docs/` |
+
+If this repo requires standards not covered by the Hiroba baseline, add a skill directly in `.opencode/skills/<name>/SKILL.md` alongside the symlinks and open a PR to Hiroba to include it upstream.
 
 ## Markdown Linting
 

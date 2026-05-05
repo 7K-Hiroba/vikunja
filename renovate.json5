@@ -4,6 +4,9 @@
     'config:recommended',
     ':semanticCommits',
   ],
+  separateMajorMinor: false,
+  separateMinorPatch: false,
+
   customManagers: [
     {
       customType: 'regex',
@@ -29,6 +32,13 @@
     },
   ],
   packageRules: [
+    {
+      description: 'Group Dockerfile base image updates',
+      matchManagers: ['dockerfile'],
+      groupName: 'docker-base-images',
+      semanticCommitType: 'fix',
+      semanticCommitScope: 'docker',
+    },
     {
       description: 'Group GitHub Actions updates',
       matchManagers: [
