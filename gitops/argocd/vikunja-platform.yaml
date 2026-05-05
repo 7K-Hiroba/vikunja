@@ -34,15 +34,27 @@ spec:
           database: vikunja
           owner: vikunja
           backup:
-            enabled: false
+            enabled: true
+            schedule: "0 2 * * *"
+            retentionPolicy: "7d"
+            garage:
+              endpoint: "http://garage.garage.svc.cluster.local:3900"
+              credentialsSecret:
+                name: vikunja-pg-garage-key
+                accessKeyKey: accessKey
+                secretKeyKey: secretKey
         s3:
           enabled: true
-          provider: crossplane
+          provider: garage
           bucketName: files
-          acl: private
-          crossplane:
-            region: us-east-1
-            providerConfigRef: aws-provider
+          garage:
+            endpoint: "http://garage.garage.svc.cluster.local:3900"
+            accessKeySecret:
+              name: vikunja-garage-key
+              key: accessKey
+            secretKeySecret:
+              name: vikunja-garage-key
+              key: secretKey
         externalSecrets:
           enabled: true
           refreshInterval: 1h
