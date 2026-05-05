@@ -1,0 +1,62 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: vikunja-platform
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/part-of: hiroba
+spec:
+  interval: 30m
+  suspend: true # set false only when actively managing infrastructure
+  chart:
+    spec:
+      chart: ./helm/platform
+      sourceRef:
+        kind: GitRepository
+        name: vikunja
+        namespace: flux-system
+  targetNamespace: vikunja
+  install:
+    createNamespace: true
+  values:
+    global:
+      appName: vikunja
+    postgres:
+      enabled: true
+      provider: cnpg
+      instances: 1
+      storage:
+        size: 10Gi
+      resources:
+        limits:
+          cpu: "1"
+          memory: 1Gi
+        requests:
+          cpu: 250m
+          memory: 256Mi
+      imageName: ghcr.io/cloudnative-pg/postgresql:18.3
+      database: vikunja
+      owner: vikunja
+      backup:
+        enabled: false
+    s3:
+      enabled: true
+      provider: crossplane
+      bucketName: files
+      acl: private
+      crossplane:
+        region: us-east-1
+        providerConfigRef: aws-provider
+    externalSecrets:
+      enabled: true
+      refreshInterval: 1h
+      storeRef:
+        name: cluster-secret-store
+        kind: ClusterSecretStore
+      data:
+        - secretKey: VIKUNJA_DATABASE_PASSWORD
+          remoteKey: vikunja/postgres
+          property: password
+        - secretKey: VIKUNJA_SERVICE_JWTSECRET
+          remoteKey: vikunja/service
+          property: jwtSecret

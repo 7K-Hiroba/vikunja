@@ -1,0 +1,66 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vikunja-platform
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: hiroba
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: vikunja
+  source:
+    repoURL: https://github.com/7K-Hiroba/vikunja.git
+    targetRevision: HEAD
+    path: helm/platform
+    helm:
+      valuesObject:
+        global:
+          appName: vikunja
+        postgres:
+          enabled: true
+          provider: cnpg
+          instances: 1
+          storage:
+            size: 10Gi
+          resources:
+            limits:
+              cpu: "1"
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          imageName: ghcr.io/cloudnative-pg/postgresql:18.3
+          database: vikunja
+          owner: vikunja
+          backup:
+            enabled: false
+        s3:
+          enabled: true
+          provider: crossplane
+          bucketName: files
+          acl: private
+          crossplane:
+            region: us-east-1
+            providerConfigRef: aws-provider
+        externalSecrets:
+          enabled: true
+          refreshInterval: 1h
+          storeRef:
+            name: cluster-secret-store
+            kind: ClusterSecretStore
+          data:
+            - secretKey: VIKUNJA_DATABASE_PASSWORD
+              remoteKey: vikunja/postgres
+              property: password
+            - secretKey: VIKUNJA_SERVICE_JWTSECRET
+              remoteKey: vikunja/service
+              property: jwtSecret
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: vikunja
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    # No automated: block — sync manually after review
