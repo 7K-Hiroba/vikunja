@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.2 (2026-05-05)
+
+## What's Changed
+* chore(infra): sync common infrastructure with Hiroba template by @joaodss2 in https://github.com/7K-Hiroba/vikunja/pull/12
+
+
+**Full Changelog**: https://github.com/7K-Hiroba/vikunja/compare/helm-platform-v1.0.1...helm-platform-v1.0.2
+
 ## 1.0.1 (2026-05-03)
 
 ## What's Changed
