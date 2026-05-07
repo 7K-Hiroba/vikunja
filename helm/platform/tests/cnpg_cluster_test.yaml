@@ -170,6 +170,10 @@ tests:
           value: vikunja-pg-s3-key
         documentIndex: 2
       - equal:
+          path: spec.secretTemplate.additionalData.S3_REGION
+          value: "garage"
+        documentIndex: 2
+      - equal:
           path: spec.bucketPermissions[0].bucketRef.name
           value: vikunja-pg-backups
         documentIndex: 2
@@ -202,6 +206,14 @@ tests:
       - equal:
           path: spec.configuration.endpointURL
           value: "http://garage.garage.svc.cluster.local:3900"
+        documentIndex: 3
+      - equal:
+          path: spec.configuration.s3Credentials.region.name
+          value: vikunja-pg-s3-key
+        documentIndex: 3
+      - equal:
+          path: spec.configuration.s3Credentials.region.key
+          value: S3_REGION
         documentIndex: 3
       - equal:
           path: spec.configuration.s3Credentials.accessKeyId.name

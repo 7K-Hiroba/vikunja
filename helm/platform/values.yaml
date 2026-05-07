@@ -54,6 +54,9 @@ postgres:
       # automatically to permit cross-namespace access.
       clusterRefNamespace: ""
       endpoint: "http://garage.garage.svc.cluster.local:3900"
+      # -- S3 region. Required by the AWS SDK even for non-AWS endpoints like
+      # Garage. The GarageKey secret includes this as S3_REGION.
+      region: garage
 
 # -- S3-compatible object storage. When enabled, the base chart switches
 # Vikunja from local filesystem storage to S3 — uploaded files go to the
