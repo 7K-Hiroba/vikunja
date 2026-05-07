@@ -6,7 +6,7 @@ description: |-
   PostgreSQL (CNPG), ExternalSecrets, and observability (ServiceMonitor,
   Grafana dashboard, PrometheusRule).
 type: application
-version: 1.0.2
+version: 1.1.0
 appVersion: "2.3.0"
 maintainers:
   - name: 7k-hiroba

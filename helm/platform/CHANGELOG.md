@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.0 (2026-05-07)
+
+## What's Changed
+* chore: update vikunja gitops to use garage operator by @joaodss2 in https://github.com/7K-Hiroba/vikunja/pull/15
+* feat: add sso wiring, documentation and examples by @joaodss2 in https://github.com/7K-Hiroba/vikunja/pull/16
+
+
+**Full Changelog**: https://github.com/7K-Hiroba/vikunja/compare/helm-platform-v1.0.2...helm-platform-v1.1.0
+
 ## 1.0.2 (2026-05-05)
 
 ## What's Changed

@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.0 (2026-05-07)
+
+## What's Changed
+* chore(infra): sync common infrastructure with Hiroba template by @joaodss2 in https://github.com/7K-Hiroba/vikunja/pull/12
+* chore: release main by @github-actions[bot] in https://github.com/7K-Hiroba/vikunja/pull/13
+* chore: update vikunja gitops to use garage operator by @joaodss2 in https://github.com/7K-Hiroba/vikunja/pull/15
+* feat: add sso wiring, documentation and examples by @joaodss2 in https://github.com/7K-Hiroba/vikunja/pull/16
+
+
+**Full Changelog**: https://github.com/7K-Hiroba/vikunja/compare/helm-base-v1.0.1...helm-base-v1.1.0
+
 ## 1.0.1 (2026-05-03)
 
 ## What's Changed
