@@ -42,23 +42,14 @@ spec:
         schedule: "0 2 * * *"
         retentionPolicy: "7d"
         garage:
+          clusterRef: garage
           endpoint: "http://garage.garage.svc.cluster.local:3900"
-          credentialsSecret:
-            name: vikunja-pg-garage-key
-            accessKeyKey: accessKey
-            secretKeyKey: secretKey
     s3:
       enabled: true
       provider: garage
       bucketName: files
       garage:
-        endpoint: "http://garage.garage.svc.cluster.local:3900"
-        accessKeySecret:
-          name: vikunja-garage-key
-          key: accessKey
-        secretKeySecret:
-          name: vikunja-garage-key
-          key: secretKey
+        clusterRef: garage
     externalSecrets:
       enabled: true
       refreshInterval: 1h
