@@ -54,6 +54,8 @@ spec:
         value: /app/vikunja/files
       # -- OpenID Connect. Uncomment and fill in to enable SSO.
       # The client secret is pulled from the platform ExternalSecret.
+      # IMPORTANT: Viper cannot discover OIDC providers from env vars alone.
+      # You MUST also enable configMap with the provider key declared — see below.
       # - name: VIKUNJA_AUTH_LOCAL_ENABLED
       #   value: "false"
       # - name: VIKUNJA_AUTH_OPENID_ENABLED
@@ -68,6 +70,15 @@ spec:
       #   value: vikunja
       # - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_SCOPE
       #   value: "openid profile email"
+    # configMap:
+    #   enabled: true
+    #   data:
+    #     config.yml: |
+    #       auth:
+    #         openid:
+    #           enabled: true
+    #           providers:
+    #             keycloak:
     envFrom:
       - secretRef:
           name: vikunja

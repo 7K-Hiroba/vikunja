@@ -81,6 +81,24 @@ Replace `KEYCLOAK` with the uppercased provider ID of your choice. The client se
 
 User registration is disabled by default (`VIKUNJA_SERVICE_ENABLEREGISTRATION=false`).
 
+### Declaring OIDC providers in a config file
+
+Vikunja's config library (Viper) cannot discover provider keys from environment variables alone — the provider key must exist in a `config.yml` for Viper to look for the associated env vars. Enable the `configMap` value to mount a minimal config file:
+
+```yaml
+configMap:
+  enabled: true
+  data:
+    config.yml: |
+      auth:
+        openid:
+          enabled: true
+          providers:
+            keycloak:
+```
+
+The file only declares the provider key; all actual values come from `env` and `envFrom` and override the empty entries at runtime.
+
 All values are validated against [`values.schema.json`](values.schema.json). Artifact Hub renders the schema as an interactive form on the chart page.
 
 ## Notes

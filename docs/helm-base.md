@@ -80,6 +80,24 @@ Replace `KEYCLOAK` in the variable names with the uppercased provider ID you wan
 
 The client secret (`VIKUNJA_AUTH_OPENID_PROVIDERS_<ID>_CLIENTSECRET`) must **not** be set in `env`. It is injected via `envFrom` from the Secret the platform chart provisions — see the [ExternalSecrets section](./helm-platform.md#externalsecrets).
 
+### Declaring OIDC providers in a config file
+
+Vikunja uses Viper for configuration, which cannot discover provider keys from environment variables alone. The provider key (e.g. `keycloak`) **must** be declared in a `config.yml` file so Viper knows to look for the associated env vars. The chart supports this via the `configMap` value:
+
+```yaml
+configMap:
+  enabled: true
+  data:
+    config.yml: |
+      auth:
+        openid:
+          enabled: true
+          providers:
+            keycloak:
+```
+
+The file only needs the provider key — all actual values (name, authurl, clientid, scope, clientsecret) come from `env` and `envFrom` and override the empty file entries at runtime. Mounting is automatic: the chart creates a ConfigMap, mounts it at `/app/vikunja/config.yml`, and Vikunja picks it up on startup.
+
 ### Disabling user registration
 
 When using SSO, you typically want to prevent random sign-ups. The chart sets `VIKUNJA_SERVICE_ENABLEREGISTRATION=false` by default. Set it to `"true"` only if you want local account creation alongside SSO.

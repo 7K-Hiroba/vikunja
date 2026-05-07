@@ -93,6 +93,20 @@ podDisruptionBudget:
   minAvailable: 1
   # maxUnavailable: 1
 
+# Vikunja requires a config.yml to declare OIDC provider keys — Viper
+# (the config library) only discovers providers that appear in the file.
+# Env vars override the values at runtime, but the key itself must exist.
+# When disabled, no ConfigMap is created and no volume is mounted.
+configMap:
+  enabled: false
+  data: {}
+  #  config.yml: |
+  #    auth:
+  #      openid:
+  #        enabled: true
+  #        providers:
+  #          keycloak:
+
 # Persistent storage for Vikunja's uploaded files. When disabled the chart
 # falls back to an emptyDir and uploads are lost on pod restart.
 persistence:

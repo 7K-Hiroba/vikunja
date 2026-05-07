@@ -290,3 +290,41 @@ tests:
               secretKeyRef:
                 name: my-custom-secret
                 key: db-password
+
+  - it: mounts config volume when configMap is enabled
+    set:
+      configMap:
+        enabled: true
+        data:
+          config.yml: |
+            auth:
+              openid:
+                providers:
+                  keycloak:
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: config
+            mountPath: /app/vikunja/config.yml
+            subPath: config.yml
+            readOnly: true
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config
+            configMap:
+              name: RELEASE-NAME-vikunja-config
+
+  - it: omits config volume when configMap is disabled
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: config
+          anyName: true
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: config
+          anyName: true
