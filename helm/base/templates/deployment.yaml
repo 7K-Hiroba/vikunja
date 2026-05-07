@@ -47,9 +47,18 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          {{- with .Values.env }}
+          {{- if or .Values.env .Values.database.existingPasswordSecret.name }}
           env:
+            {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- if .Values.database.existingPasswordSecret.name }}
+            - name: VIKUNJA_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.existingPasswordSecret.name }}
+                  key: {{ .Values.database.existingPasswordSecret.key }}
+            {{- end }}
           {{- end }}
           {{- with .Values.envFrom }}
           envFrom:

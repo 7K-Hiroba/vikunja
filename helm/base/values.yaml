@@ -123,12 +123,19 @@ env:
   - name: VIKUNJA_DATABASE_DATABASE
     value: vikunja
   - name: VIKUNJA_DATABASE_SSLMODE
-    value: require
+    value: disable
   - name: VIKUNJA_FILES_BASEPATH
     value: /app/vikunja/files
 
-# Pull non-public values (DB password, JWT secret, mailer password) from
-# Secrets — typically the one created by the platform chart's ExternalSecret.
+# Reference the CNPG-managed Secret that holds the auto-generated app-user
+# password. CNPG creates <cluster>-app (e.g. vikunja-pg-app) with key
+# "password" during bootstrap. Leave name empty to skip injecting the env var.
+database:
+  existingPasswordSecret:
+    name: vikunja-pg-app
+    key: password
+
+# Pull non-public values (JWT secret, mailer password) from Secrets.
 envFrom: []
 #  - secretRef:
 #      name: vikunja

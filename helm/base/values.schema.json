@@ -198,6 +198,20 @@
     "nodeSelector": { "type": "object" },
     "tolerations": { "type": "array" },
     "affinity": { "type": "object" },
+    "database": {
+      "type": "object",
+      "properties": {
+        "existingPasswordSecret": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "key": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
     "env": {
       "type": "array",
       "items": {

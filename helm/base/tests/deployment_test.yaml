@@ -204,3 +204,40 @@ tests:
       - equal:
           path: spec.template.metadata.annotations["prometheus.io/scrape"]
           value: "true"
+
+  - it: injects database password from CNPG secret by default
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: vikunja-pg-app
+                key: password
+
+  - it: omits database password when existingPasswordSecret.name is empty
+    set:
+      database.existingPasswordSecret.name: ""
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_DATABASE_PASSWORD
+          anyName: true
+
+  - it: uses custom database password secret
+    set:
+      database:
+        existingPasswordSecret:
+          name: my-custom-secret
+          key: db-password
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: my-custom-secret
+                key: db-password
