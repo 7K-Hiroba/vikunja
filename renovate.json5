@@ -21,14 +21,16 @@
     },
     {
       customType: 'regex',
-      description: 'Vikunja container image in helm/base values (repository + tag)',
+      description: 'Track upstream Vikunja image via Chart.yaml appVersion',
       managerFilePatterns: [
-        '/helm/base/values\\.yaml$/',
+        '/helm/(base|platform)/Chart\\.yaml$/',
       ],
       matchStrings: [
-        'repository:\\s*(?<depName>vikunja/vikunja)\\s*\\n\\s*pullPolicy:[^\\n]*\\s*\\n\\s*tag:\\s*"?(?<currentValue>[^"\\s]+)"?',
+        'appVersion:\\s*"?(?<currentValue>[^"\\s]+)"?',
       ],
+      depNameTemplate: 'vikunja/vikunja',
       datasourceTemplate: 'docker',
+      versioningTemplate: 'docker',
     },
   ],
   packageRules: [
@@ -48,12 +50,13 @@
       semanticCommitType: 'ci',
     },
     {
-      description: 'Vikunja image bumps land in helm-base',
+      description: 'Bump both charts together when upstream Vikunja image moves',
       matchPackageNames: [
         'vikunja/vikunja',
       ],
+      groupName: 'vikunja-app',
       semanticCommitType: 'fix',
-      semanticCommitScope: 'helm-base',
+      semanticCommitScope: 'helm',
     },
     {
       description: 'Platform chart dependency updates',

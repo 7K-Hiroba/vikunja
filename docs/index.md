@@ -23,7 +23,7 @@ This repository ships two Helm charts: [`vikunja`](./helm-base.md) for the workl
                 Postgres (CNPG, vikunja-pg-rw)
                       ▲
         Secret `vikunja` ◀── ExternalSecret ◀── ClusterSecretStore
-        (DB password, JWT secret)
+        (DB password, JWT secret, OIDC client secret)
 ```
 
 ## Prerequisites

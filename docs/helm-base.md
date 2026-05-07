@@ -35,6 +35,8 @@ env:
     value: "https://vikunja.example.com"   # override per environment
   - name: VIKUNJA_SERVICE_ENABLEMETRICS
     value: "true"
+  - name: VIKUNJA_SERVICE_ENABLEREGISTRATION
+    value: "false"                         # disable public sign-ups
   - name: VIKUNJA_DATABASE_TYPE
     value: postgres
   - name: VIKUNJA_DATABASE_HOST
@@ -49,6 +51,39 @@ env:
     value: /app/vikunja/files
 ```
 
+### OpenID Connect (SSO)
+
+Vikunja supports OpenID Connect authentication via environment variables. The non-secret provider settings go in `env`; the client secret is pulled from the platform chart's ExternalSecret via `envFrom`. See the [upstream OpenID docs](https://vikunja.io/docs/openid/) for the full reference.
+
+Uncomment and fill in the provider block in `env`:
+
+```yaml
+env:
+  # ... existing env vars ...
+  - name: VIKUNJA_AUTH_LOCAL_ENABLED
+    value: "false"                         # disable local login; SSO only
+  - name: VIKUNJA_AUTH_OPENID_ENABLED
+    value: "true"
+  - name: VIKUNJA_AUTH_OPENID_REDIRECTURL
+    value: "https://vikunja.example.com/auth/openid/"
+  - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_NAME
+    value: Keycloak
+  - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_AUTHURL
+    value: https://keycloak.example.com/realms/myrealm
+  - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_CLIENTID
+    value: vikunja
+  - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_SCOPE
+    value: "openid profile email"
+```
+
+Replace `KEYCLOAK` in the variable names with the uppercased provider ID you want. The redirect URL for your identity provider must end with `/auth/openid/<provider-id>` (lowercase). For example, with provider ID `keycloak`, the redirect URL registered in Keycloak should be `https://vikunja.example.com/auth/openid/keycloak`.
+
+The client secret (`VIKUNJA_AUTH_OPENID_PROVIDERS_<ID>_CLIENTSECRET`) must **not** be set in `env`. It is injected via `envFrom` from the Secret the platform chart provisions — see the [ExternalSecrets section](./helm-platform.md#externalsecrets).
+
+### Disabling user registration
+
+When using SSO, you typically want to prevent random sign-ups. The chart sets `VIKUNJA_SERVICE_ENABLEREGISTRATION=false` by default. Set it to `"true"` only if you want local account creation alongside SSO.
+
 ### Injecting secrets
 
 Don't put credentials in `env`. Use `envFrom` to pull from a `Secret` — typically the one populated by the platform chart's `ExternalSecret`:
@@ -59,7 +94,7 @@ envFrom:
       name: vikunja
 ```
 
-The platform chart's defaults populate that Secret with `VIKUNJA_DATABASE_PASSWORD` and `VIKUNJA_SERVICE_JWTSECRET`. See the [platform chart docs](./helm-platform.md#externalsecrets) for the data mapping.
+The platform chart's defaults populate that Secret with `VIKUNJA_DATABASE_PASSWORD`, `VIKUNJA_SERVICE_JWTSECRET`, and (when uncommented) `VIKUNJA_AUTH_OPENID_PROVIDERS_<ID>_CLIENTSECRET`. See the [platform chart docs](./helm-platform.md#externalsecrets) for the data mapping.
 
 ## Persistence
 
@@ -76,6 +111,34 @@ persistence:
 ```
 
 When `enabled: false` (default), files live in an `emptyDir` and are lost on pod restart — fine for a quick demo, never for production.
+
+## S3 storage
+
+Instead of a PVC, Vikunja can store uploaded files in an S3-compatible object store (Garage, MinIO, AWS S3, etc.). This is the recommended approach for production because:
+
+1. **Files persist** across pod restarts without a PVC.
+2. **HA is possible** — multiple replicas share the same bucket, so autoscaling works safely.
+
+```yaml
+s3:
+  enabled: true
+  endpoint: "http://garage.garage.svc.cluster.local:3900"
+  bucket: vikunja-files
+  region: garage               # required — the AWS SDK needs a region even for non-AWS endpoints
+  usePathStyle: true          # required for Garage, MinIO, and most self-hosted S3
+  existingSecret:
+    name: vikunja-s3-key      # Secret created by the platform chart's Garage integration
+    accessKeyKey: access-key-id
+    secretKeyKey: secret-access-key
+```
+
+When `s3.enabled: true`:
+
+- The chart injects `VIKUNJA_FILES_TYPE=s3`, `VIKUNJA_FILES_S3_ENDPOINT`, `VIKUNJA_FILES_S3_BUCKET`, and (when set) `VIKUNJA_FILES_S3_REGION` and `VIKUNJA_FILES_S3_USEPATHSTYLE` as env vars.
+- Credentials are pulled from the referenced Secret via `VIKUNJA_FILES_S3_ACCESSKEY` / `VIKUNJA_FILES_S3_SECRETKEY`.
+- The PVC is **not** created even if `persistence.files.enabled` is `true`; an `emptyDir` is used instead.
+
+See the [platform chart S3 section](./helm-platform.md#s3-storage) for wiring the bucket and credentials.
 
 ## Ingress
 
@@ -101,7 +164,7 @@ The default catch-all sends all traffic to the service. Override `gateway.rules`
 
 ## Scaling
 
-Horizontal autoscaling is off by default and **should stay off** unless `/app/vikunja/files` is on RWX storage (or files are migrated out — Vikunja doesn't currently support an S3 backend).
+Horizontal autoscaling is off by default. With PVC storage (ReadWriteOnce), only one pod can mount the volume, so scaling is **unsafe**. When S3 is enabled, file storage is shared and autoscaling works — replicas are stateless with respect to file I/O.
 
 ```yaml
 autoscaling:

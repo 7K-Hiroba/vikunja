@@ -187,3 +187,101 @@ tests:
       - isNull:
           path: spec.lifecycle
         documentIndex: 0
+
+  - it: omits clusterRefNamespace when not set
+    set:
+      s3:
+        enabled: true
+        provider: garage
+        bucketName: files
+        garage:
+          clusterRef: garage
+    asserts:
+      - isNull:
+          path: spec.clusterRef.namespace
+        documentIndex: 0
+      - isNull:
+          path: spec.clusterRef.namespace
+        documentIndex: 1
+
+  - it: sets clusterRefNamespace on bucket and key
+    set:
+      s3:
+        enabled: true
+        provider: garage
+        bucketName: files
+        garage:
+          clusterRef: garage
+          clusterRefNamespace: garage-system
+    asserts:
+      - equal:
+          path: spec.clusterRef.namespace
+          value: garage-system
+        documentIndex: 0
+      - equal:
+          path: spec.clusterRef.namespace
+          value: garage-system
+        documentIndex: 1
+
+  - it: creates GarageReferenceGrant when clusterRefNamespace differs from release namespace
+    release:
+      name: vikunja
+      namespace: vikunja
+    set:
+      s3:
+        enabled: true
+        provider: garage
+        bucketName: files
+        garage:
+          clusterRef: garage
+          clusterRefNamespace: garage
+    asserts:
+      - hasDocuments:
+          count: 3
+      - isKind:
+          of: GarageReferenceGrant
+        documentIndex: 2
+      - equal:
+          path: metadata.namespace
+          value: garage
+        documentIndex: 2
+      - equal:
+          path: spec.from[0].kind
+          value: GarageKey
+        documentIndex: 2
+      - equal:
+          path: spec.from[0].namespace
+          value: vikunja
+        documentIndex: 2
+      - equal:
+          path: spec.from[1].kind
+          value: GarageBucket
+        documentIndex: 2
+      - equal:
+          path: spec.from[1].namespace
+          value: vikunja
+        documentIndex: 2
+      - equal:
+          path: spec.to[0].kind
+          value: GarageCluster
+        documentIndex: 2
+      - equal:
+          path: spec.to[0].name
+          value: garage
+        documentIndex: 2
+
+  - it: omits GarageReferenceGrant when clusterRefNamespace matches release namespace
+    release:
+      name: vikunja
+      namespace: garage
+    set:
+      s3:
+        enabled: true
+        provider: garage
+        bucketName: files
+        garage:
+          clusterRef: garage
+          clusterRefNamespace: garage
+    asserts:
+      - hasDocuments:
+          count: 2

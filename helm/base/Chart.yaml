@@ -9,7 +9,7 @@ type: application
 version: 1.0.1
 # Tracks the upstream Vikunja image version. Renovate keeps this aligned with
 # helm/base/values.yaml's image.tag override (when set).
-appVersion: "0.24.6"
+appVersion: "2.3.0"
 maintainers:
   - name: 7k-hiroba
 keywords:

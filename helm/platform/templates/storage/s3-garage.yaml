@@ -8,6 +8,9 @@ metadata:
 spec:
   clusterRef:
     name: {{ .Values.s3.garage.clusterRef }}
+    {{- if .Values.s3.garage.clusterRefNamespace }}
+    namespace: {{ .Values.s3.garage.clusterRefNamespace }}
+    {{- end }}
   {{- with .Values.s3.garage.quotas }}
   quotas:
     {{- toYaml . | nindent 4 }}
@@ -30,6 +33,9 @@ metadata:
 spec:
   clusterRef:
     name: {{ .Values.s3.garage.clusterRef }}
+    {{- if .Values.s3.garage.clusterRefNamespace }}
+    namespace: {{ .Values.s3.garage.clusterRefNamespace }}
+    {{- end }}
   name: "{{ include "platform.name" . }} S3 Key"
   secretTemplate:
     name: {{ include "platform.name" . }}-s3-key
@@ -40,4 +46,23 @@ spec:
         name: {{ include "platform.name" . }}-{{ .Values.s3.bucketName }}
       read: true
       write: true
+{{- if and .Values.s3.garage.clusterRefNamespace (ne .Values.s3.garage.clusterRefNamespace .Release.Namespace) }}
+---
+apiVersion: garage.rajsingh.info/v1beta1
+kind: GarageReferenceGrant
+metadata:
+  name: {{ include "platform.name" . }}-from-{{ .Release.Namespace }}
+  namespace: {{ .Values.s3.garage.clusterRefNamespace }}
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+spec:
+  from:
+    - kind: GarageKey
+      namespace: {{ .Release.Namespace }}
+    - kind: GarageBucket
+      namespace: {{ .Release.Namespace }}
+  to:
+    - kind: GarageCluster
+      name: {{ .Values.s3.garage.clusterRef }}
+{{- end }}
 {{- end }}

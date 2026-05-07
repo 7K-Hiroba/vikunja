@@ -88,9 +88,29 @@ externalSecrets:
     - secretKey: VIKUNJA_SERVICE_JWTSECRET
       remoteKey: vikunja/service
       property: jwtSecret
+    # -- OIDC client secret. Uncomment and adjust the provider ID to match
+    # the base chart env vars.
+    # - secretKey: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_CLIENTSECRET
+    #   remoteKey: vikunja/oidc
+    #   property: clientSecret
 ```
 
 The keys (`VIKUNJA_DATABASE_PASSWORD`, `VIKUNJA_SERVICE_JWTSECRET`) match Vikunja's environment variable names exactly, so a single `envFrom: secretRef:` is enough on the workload side.
+
+### OIDC client secret
+
+When OpenID Connect is enabled in the [base chart](./helm-base.md#openid-connect-sso), the provider's client secret must be stored in the upstream secret store and mapped here. The `secretKey` must match the env var name Vikunja expects: `VIKUNJA_AUTH_OPENID_PROVIDERS_<PROVIDER_ID>_CLIENTSECRET`, where `<PROVIDER_ID>` is the uppercased provider key used in the base chart's env vars (e.g. `KEYCLOAK`).
+
+```yaml
+externalSecrets:
+  data:
+    # ... existing mappings ...
+    - secretKey: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_CLIENTSECRET
+      remoteKey: vikunja/oidc
+      property: clientSecret
+```
+
+Adjust `remoteKey` and `property` to point to where your secret store keeps the OIDC client secret for Vikunja.
 
 ### Wiring back into the base chart
 
@@ -157,3 +177,56 @@ The full alert definitions live under `observability.prometheusRules.groups` and
 - The parent `Gateway` resource — provided by a gateway chart
 - TLS certificates — expected to be attached to the Gateway's HTTPS listener
 - Cluster-wide operators (CNPG, external-secrets, Prometheus) — these are platform prerequisites
+
+## S3 storage
+
+Provisions an S3-compatible bucket (via Crossplane or the Garage operator) for Vikunja's uploaded files. When enabled, the base chart switches from PVC-based file storage to S3 — enabling HA and autoscaling.
+
+### Garage (self-hosted)
+
+Creates a `GarageBucket` and `GarageKey`. The key produces a Kubernetes Secret (`<app>-s3-key`) with keys `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `S3_BUCKET`.
+
+```yaml
+s3:
+  enabled: true
+  provider: garage
+  bucketName: files
+  garage:
+    clusterRef: garage
+    endpoint: "http://garage.garage.svc.cluster.local:3900"
+```
+
+### Crossplane (AWS)
+
+Creates an S3 bucket via the Crossplane AWS provider. Credentials are managed by the provider config, not a Garage key.
+
+```yaml
+s3:
+  enabled: true
+  provider: crossplane
+  bucketName: files
+  acl: private
+  crossplane:
+    region: us-east-1
+    providerConfigRef: aws-provider
+```
+
+### Wiring S3 into the base chart
+
+When using Garage, the operator creates a Secret named `<app>-s3-key` with the access credentials. Point the base chart's `s3.existingSecret` at it and set the endpoint/bucket:
+
+```yaml
+# helm/base values override
+s3:
+  enabled: true
+  endpoint: "http://garage.garage.svc.cluster.local:3900"
+  bucket: vikunja-files
+  existingSecret:
+    name: vikunja-s3-key
+    accessKeyKey: AWS_ACCESS_KEY_ID
+    secretKeyKey: AWS_SECRET_ACCESS_KEY
+```
+
+When using Crossplane, you need to provide credentials via a separate Secret (e.g. an ExternalSecret mapping) and reference it in `s3.existingSecret`. The bucket name comes from the Crossplane bucket resource name.
+
+> **HA note:** S3 enables multiple Vikunja replicas to share file storage. Once `s3.enabled: true`, you can safely increase `replicaCount` or enable `autoscaling` in the base chart.

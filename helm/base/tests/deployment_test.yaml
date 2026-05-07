@@ -25,7 +25,7 @@ tests:
     asserts:
       - matchRegex:
           path: spec.template.spec.containers[0].image
-          pattern: ":0\\.24\\.6$"
+          pattern: ":2\\.3\\.0$"
 
   - it: omits replicas when autoscaling is enabled
     set:
@@ -100,6 +100,55 @@ tests:
           content:
             name: VIKUNJA_FILES_BASEPATH
             value: /app/vikunja/files
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_SERVICE_ENABLEREGISTRATION
+            value: "false"
+
+  - it: renders OIDC env vars when set
+    set:
+      env:
+        - name: VIKUNJA_AUTH_LOCAL_ENABLED
+          value: "false"
+        - name: VIKUNJA_AUTH_OPENID_ENABLED
+          value: "true"
+        - name: VIKUNJA_AUTH_OPENID_REDIRECTURL
+          value: "https://vikunja.example.com/auth/openid/"
+        - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_NAME
+          value: Keycloak
+        - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_AUTHURL
+          value: https://keycloak.example.com/realms/myrealm
+        - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_CLIENTID
+          value: vikunja
+        - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_SCOPE
+          value: "openid profile email"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_AUTH_LOCAL_ENABLED
+            value: "false"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_AUTH_OPENID_ENABLED
+            value: "true"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_NAME
+            value: Keycloak
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_AUTHURL
+            value: https://keycloak.example.com/realms/myrealm
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_CLIENTID
+            value: vikunja
 
   - it: renders custom env vars when set
     set:
@@ -241,3 +290,116 @@ tests:
               secretKeyRef:
                 name: my-custom-secret
                 key: db-password
+
+  - it: injects S3 env vars when s3 is enabled
+    set:
+      s3:
+        enabled: true
+        endpoint: "http://garage.garage.svc.cluster.local:3900"
+        bucket: vikunja-files
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_FILES_S3_ENDPOINT
+            value: "http://garage.garage.svc.cluster.local:3900"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_FILES_S3_BUCKET
+            value: vikunja-files
+
+  - it: injects S3 region when set
+    set:
+      s3:
+        enabled: true
+        endpoint: "https://s3.amazonaws.com"
+        bucket: my-bucket
+        region: us-east-1
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_FILES_S3_REGION
+            value: us-east-1
+
+  - it: omits S3 region when not set
+    set:
+      s3:
+        enabled: true
+        endpoint: "http://garage.garage.svc.cluster.local:3900"
+        bucket: vikunja-files
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_FILES_S3_REGION
+          anyName: true
+
+  - it: injects S3 credentials from existingSecret
+    set:
+      s3:
+        enabled: true
+        endpoint: "http://garage.garage.svc.cluster.local:3900"
+        bucket: vikunja-files
+        existingSecret:
+          name: vikunja-s3-key
+          accessKeyKey: AWS_ACCESS_KEY_ID
+          secretKeyKey: AWS_SECRET_ACCESS_KEY
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_FILES_S3_ACCESSKEY
+            valueFrom:
+              secretKeyRef:
+                name: vikunja-s3-key
+                key: AWS_ACCESS_KEY_ID
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_FILES_S3_SECRETKEY
+            valueFrom:
+              secretKeyRef:
+                name: vikunja-s3-key
+                key: AWS_SECRET_ACCESS_KEY
+
+  - it: omits S3 credential env vars when existingSecret.name is empty
+    set:
+      s3:
+        enabled: true
+        endpoint: "http://garage.garage.svc.cluster.local:3900"
+        bucket: vikunja-files
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_FILES_S3_ACCESSKEY
+          anyName: true
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_FILES_S3_SECRETKEY
+          anyName: true
+
+  - it: uses emptyDir for files when s3 is enabled regardless of persistence
+    set:
+      s3:
+        enabled: true
+        endpoint: "http://garage.garage.svc.cluster.local:3900"
+        bucket: vikunja-files
+      persistence.files.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: files
+            emptyDir: {}
+
+  - it: does not inject S3 env vars when s3 is disabled
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_FILES_S3_ENDPOINT
+          anyName: true

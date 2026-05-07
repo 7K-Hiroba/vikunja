@@ -50,3 +50,11 @@ tests:
       - equal:
           path: spec.storageClassName
           value: fast-ssd
+
+  - it: is not created when s3 is enabled even if persistence is enabled
+    set:
+      persistence.files.enabled: true
+      s3.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
