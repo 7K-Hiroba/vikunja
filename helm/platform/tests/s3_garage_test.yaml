@@ -1,0 +1,189 @@
+suite: S3 Garage
+templates:
+  - templates/storage/s3-garage.yaml
+capabilities:
+  apiVersions:
+    - garage.rajsingh.info/v1beta1
+tests:
+  - it: is not created when s3 is disabled
+    set:
+      s3.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: is not created when provider is crossplane
+    set:
+      s3.enabled: true
+      s3.provider: crossplane
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders GarageBucket and GarageKey when enabled
+    set:
+      s3:
+        enabled: true
+        provider: garage
+        bucketName: files
+        garage:
+          clusterRef: garage
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: renders GarageBucket with correct name and clusterRef
+    set:
+      s3:
+        enabled: true
+        provider: garage
+        bucketName: files
+        garage:
+          clusterRef: my-garage
+    asserts:
+      - isKind:
+          of: GarageBucket
+        documentIndex: 0
+      - equal:
+          path: apiVersion
+          value: garage.rajsingh.info/v1beta1
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: vikunja-files
+        documentIndex: 0
+      - equal:
+          path: spec.clusterRef.name
+          value: my-garage
+        documentIndex: 0
+
+  - it: renders GarageBucket with quotas
+    set:
+      s3:
+        enabled: true
+        provider: garage
+        bucketName: files
+        garage:
+          clusterRef: garage
+          quotas:
+            maxSize: 10Gi
+            maxObjects: 100000
+    asserts:
+      - equal:
+          path: spec.quotas.maxSize
+          value: 10Gi
+        documentIndex: 0
+      - equal:
+          path: spec.quotas.maxObjects
+          value: 100000
+        documentIndex: 0
+
+  - it: renders GarageBucket with website config
+    set:
+      s3:
+        enabled: true
+        provider: garage
+        bucketName: files
+        garage:
+          clusterRef: garage
+          website:
+            enabled: true
+            indexDocument: index.html
+            errorDocument: error.html
+    asserts:
+      - equal:
+          path: spec.website.enabled
+          value: true
+        documentIndex: 0
+      - equal:
+          path: spec.website.indexDocument
+          value: index.html
+        documentIndex: 0
+      - equal:
+          path: spec.website.errorDocument
+          value: error.html
+        documentIndex: 0
+
+  - it: renders GarageKey with secret template and bucket permissions
+    set:
+      s3:
+        enabled: true
+        provider: garage
+        bucketName: files
+        garage:
+          clusterRef: garage
+    asserts:
+      - isKind:
+          of: GarageKey
+        documentIndex: 1
+      - equal:
+          path: apiVersion
+          value: garage.rajsingh.info/v1beta1
+        documentIndex: 1
+      - equal:
+          path: metadata.name
+          value: vikunja-s3-key
+        documentIndex: 1
+      - equal:
+          path: spec.clusterRef.name
+          value: garage
+        documentIndex: 1
+      - equal:
+          path: spec.secretTemplate.name
+          value: vikunja-s3-key
+        documentIndex: 1
+      - equal:
+          path: spec.secretTemplate.additionalData.S3_BUCKET
+          value: "vikunja-files"
+        documentIndex: 1
+      - equal:
+          path: spec.bucketPermissions[0].bucketRef.name
+          value: vikunja-files
+        documentIndex: 1
+      - equal:
+          path: spec.bucketPermissions[0].read
+          value: true
+        documentIndex: 1
+      - equal:
+          path: spec.bucketPermissions[0].write
+          value: true
+        documentIndex: 1
+
+  - it: omits quotas when not set
+    set:
+      s3:
+        enabled: true
+        provider: garage
+        bucketName: files
+        garage:
+          clusterRef: garage
+    asserts:
+      - isNull:
+          path: spec.quotas
+        documentIndex: 0
+
+  - it: omits website when not set
+    set:
+      s3:
+        enabled: true
+        provider: garage
+        bucketName: files
+        garage:
+          clusterRef: garage
+    asserts:
+      - isNull:
+          path: spec.website
+        documentIndex: 0
+
+  - it: omits lifecycle when not set
+    set:
+      s3:
+        enabled: true
+        provider: garage
+        bucketName: files
+        garage:
+          clusterRef: garage
+    asserts:
+      - isNull:
+          path: spec.lifecycle
+        documentIndex: 0

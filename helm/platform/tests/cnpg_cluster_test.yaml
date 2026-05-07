@@ -5,6 +5,7 @@ capabilities:
   apiVersions:
     - postgresql.cnpg.io/v1
     - barmancloud.cnpg.io/v1
+    - garage.rajsingh.info/v1beta1
 tests:
   - it: is not created when postgres is disabled
     set:
@@ -13,7 +14,7 @@ tests:
       - hasDocuments:
           count: 0
 
-  - it: renders when postgres is enabled
+  - it: renders cluster when postgres is enabled
     set:
       postgres.enabled: true
     asserts:
@@ -79,7 +80,7 @@ tests:
           path: spec.plugins
         documentIndex: 0
 
-  - it: renders two documents when backup is enabled
+  - it: renders four documents when backup is enabled
     set:
       postgres:
         enabled: true
@@ -87,14 +88,11 @@ tests:
           enabled: true
           retentionPolicy: "30d"
           garage:
+            clusterRef: garage
             endpoint: "http://garage.garage.svc.cluster.local:3900"
-            credentialsSecret:
-              name: vikunja-pg-garage-key
-              accessKeyKey: accessKey
-              secretKeyKey: secretKey
     asserts:
       - hasDocuments:
-          count: 2
+          count: 4
 
   - it: cluster references barman plugin when backup enabled
     set:
@@ -104,11 +102,8 @@ tests:
           enabled: true
           retentionPolicy: "30d"
           garage:
+            clusterRef: garage
             endpoint: "http://garage.garage.svc.cluster.local:3900"
-            credentialsSecret:
-              name: vikunja-pg-garage-key
-              accessKeyKey: accessKey
-              secretKeyKey: secretKey
     asserts:
       - equal:
           path: spec.plugins[0].name
@@ -119,43 +114,111 @@ tests:
           value: "30d"
         documentIndex: 0
 
-  - it: objectstore uses garage endpoint and credentials secret
+  - it: renders GarageBucket for pg backups
     set:
       postgres:
         enabled: true
         backup:
           enabled: true
-          retentionPolicy: "7d"
           garage:
+            clusterRef: my-garage
             endpoint: "http://garage.garage.svc.cluster.local:3900"
-            credentialsSecret:
-              name: vikunja-pg-garage-key
-              accessKeyKey: accessKey
-              secretKeyKey: secretKey
     asserts:
       - isKind:
-          of: ObjectStore
+          of: GarageBucket
         documentIndex: 1
       - equal:
           path: apiVersion
-          value: barmancloud.cnpg.io/v1
+          value: garage.rajsingh.info/v1beta1
         documentIndex: 1
+      - equal:
+          path: metadata.name
+          value: vikunja-pg-backups
+        documentIndex: 1
+      - equal:
+          path: spec.clusterRef.name
+          value: my-garage
+        documentIndex: 1
+
+  - it: renders GarageKey for pg backup credentials
+    set:
+      postgres:
+        enabled: true
+        backup:
+          enabled: true
+          garage:
+            clusterRef: my-garage
+            endpoint: "http://garage.garage.svc.cluster.local:3900"
+    asserts:
+      - isKind:
+          of: GarageKey
+        documentIndex: 2
+      - equal:
+          path: apiVersion
+          value: garage.rajsingh.info/v1beta1
+        documentIndex: 2
+      - equal:
+          path: metadata.name
+          value: vikunja-pg-s3-key
+        documentIndex: 2
+      - equal:
+          path: spec.clusterRef.name
+          value: my-garage
+        documentIndex: 2
+      - equal:
+          path: spec.secretTemplate.name
+          value: vikunja-pg-s3-key
+        documentIndex: 2
+      - equal:
+          path: spec.bucketPermissions[0].bucketRef.name
+          value: vikunja-pg-backups
+        documentIndex: 2
+      - equal:
+          path: spec.bucketPermissions[0].read
+          value: true
+        documentIndex: 2
+      - equal:
+          path: spec.bucketPermissions[0].write
+          value: true
+        documentIndex: 2
+
+  - it: objectstore references GarageKey secret for credentials
+    set:
+      postgres:
+        enabled: true
+        backup:
+          enabled: true
+          garage:
+            clusterRef: garage
+            endpoint: "http://garage.garage.svc.cluster.local:3900"
+    asserts:
+      - isKind:
+          of: ObjectStore
+        documentIndex: 3
+      - equal:
+          path: apiVersion
+          value: barmancloud.cnpg.io/v1
+        documentIndex: 3
       - equal:
           path: spec.configuration.endpointURL
           value: "http://garage.garage.svc.cluster.local:3900"
-        documentIndex: 1
+        documentIndex: 3
       - equal:
           path: spec.configuration.s3Credentials.accessKeyId.name
-          value: vikunja-pg-garage-key
-        documentIndex: 1
+          value: vikunja-pg-s3-key
+        documentIndex: 3
       - equal:
           path: spec.configuration.s3Credentials.accessKeyId.key
-          value: accessKey
-        documentIndex: 1
+          value: access-key-id
+        documentIndex: 3
+      - equal:
+          path: spec.configuration.s3Credentials.secretAccessKey.name
+          value: vikunja-pg-s3-key
+        documentIndex: 3
       - equal:
           path: spec.configuration.s3Credentials.secretAccessKey.key
-          value: secretKey
-        documentIndex: 1
+          value: secret-access-key
+        documentIndex: 3
 
   - it: objectstore enables wal and data compression
     set:
@@ -163,22 +226,18 @@ tests:
         enabled: true
         backup:
           enabled: true
-          retentionPolicy: "7d"
           garage:
+            clusterRef: garage
             endpoint: "http://garage.garage.svc.cluster.local:3900"
-            credentialsSecret:
-              name: vikunja-pg-garage-key
-              accessKeyKey: accessKey
-              secretKeyKey: secretKey
     asserts:
       - equal:
           path: spec.configuration.wal.compression
           value: gzip
-        documentIndex: 1
+        documentIndex: 3
       - equal:
           path: spec.configuration.data.compression
           value: gzip
-        documentIndex: 1
+        documentIndex: 3
 
 ---
 suite: CNPG ScheduledBackup
@@ -213,11 +272,8 @@ tests:
           schedule: "0 3 * * *"
           retentionPolicy: "7d"
           garage:
+            clusterRef: garage
             endpoint: "http://garage.garage.svc.cluster.local:3900"
-            credentialsSecret:
-              name: vikunja-pg-garage-key
-              accessKeyKey: accessKey
-              secretKeyKey: secretKey
     asserts:
       - isKind:
           of: ScheduledBackup

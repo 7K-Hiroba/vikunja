@@ -48,11 +48,8 @@ postgres:
     schedule: "0 2 * * *"
     retentionPolicy: "7d"
     garage:
+      clusterRef: garage
       endpoint: "http://garage.garage.svc.cluster.local:3900"
-      credentialsSecret:
-        name: ""
-        accessKeyKey: accessKey
-        secretKeyKey: secretKey
 
 # -- S3-compatible object storage. Disabled by default — Vikunja stores
 # uploaded files on the workload pod's filesystem (see persistence.files in
@@ -77,14 +74,7 @@ s3:
 
   # -- Garage-specific settings (provider: garage)
   garage:
-    endpoint: "http://garage.garage.svc.cluster.local:3900"
-    accessKeySecret:
-      name: ""
-      key: accessKey
-    secretKeySecret:
-      name: ""
-      key: secretKey
-    replicationFactor: 3
+    clusterRef: garage
 
 # -- ExternalSecret. Mirrors a remote secret store entry into a Kubernetes
 # Secret named after the app (`vikunja`). The base chart's `envFrom`
