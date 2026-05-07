@@ -35,6 +35,8 @@ spec:
             value: "https://vikunja.example.com"
           - name: VIKUNJA_SERVICE_ENABLEMETRICS
             value: "true"
+          - name: VIKUNJA_SERVICE_ENABLEREGISTRATION
+            value: "false"
           - name: VIKUNJA_DATABASE_TYPE
             value: postgres
           - name: VIKUNJA_DATABASE_HOST
@@ -47,6 +49,22 @@ spec:
             value: require
           - name: VIKUNJA_FILES_BASEPATH
             value: /app/vikunja/files
+          # -- OpenID Connect. Uncomment and fill in to enable SSO.
+          # The client secret is pulled from the platform ExternalSecret.
+          # - name: VIKUNJA_AUTH_LOCAL_ENABLED
+          #   value: "false"
+          # - name: VIKUNJA_AUTH_OPENID_ENABLED
+          #   value: "true"
+          # - name: VIKUNJA_AUTH_OPENID_REDIRECTURL
+          #   value: "https://vikunja.example.com/auth/openid/"
+          # - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_NAME
+          #   value: Keycloak
+          # - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_AUTHURL
+          #   value: https://keycloak.example.com/realms/myrealm
+          # - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_CLIENTID
+          #   value: vikunja
+          # - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_SCOPE
+          #   value: "openid profile email"
         envFrom:
           - secretRef:
               name: vikunja

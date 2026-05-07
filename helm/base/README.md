@@ -56,6 +56,31 @@ envFrom:
       name: vikunja
 ```
 
+### OpenID Connect (SSO)
+
+Vikunja supports OIDC authentication through environment variables. Add the provider settings to `env` and the client secret to the platform ExternalSecret:
+
+```yaml
+env:
+  # ... existing vars ...
+  - name: VIKUNJA_AUTH_LOCAL_ENABLED
+    value: "false"                         # disable local login
+  - name: VIKUNJA_AUTH_OPENID_ENABLED
+    value: "true"
+  - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_NAME
+    value: Keycloak
+  - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_AUTHURL
+    value: https://keycloak.example.com/realms/myrealm
+  - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_CLIENTID
+    value: vikunja
+  - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_SCOPE
+    value: "openid profile email"
+```
+
+Replace `KEYCLOAK` with the uppercased provider ID of your choice. The client secret is injected via `envFrom` from the platform chart's ExternalSecret — do **not** set it in `env`.
+
+User registration is disabled by default (`VIKUNJA_SERVICE_ENABLEREGISTRATION=false`).
+
 All values are validated against [`values.schema.json`](values.schema.json). Artifact Hub renders the schema as an interactive form on the chart page.
 
 ## Notes

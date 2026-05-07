@@ -35,6 +35,8 @@ env:
     value: "https://vikunja.example.com"   # override per environment
   - name: VIKUNJA_SERVICE_ENABLEMETRICS
     value: "true"
+  - name: VIKUNJA_SERVICE_ENABLEREGISTRATION
+    value: "false"                         # disable public sign-ups
   - name: VIKUNJA_DATABASE_TYPE
     value: postgres
   - name: VIKUNJA_DATABASE_HOST
@@ -49,6 +51,39 @@ env:
     value: /app/vikunja/files
 ```
 
+### OpenID Connect (SSO)
+
+Vikunja supports OpenID Connect authentication via environment variables. The non-secret provider settings go in `env`; the client secret is pulled from the platform chart's ExternalSecret via `envFrom`. See the [upstream OpenID docs](https://vikunja.io/docs/openid/) for the full reference.
+
+Uncomment and fill in the provider block in `env`:
+
+```yaml
+env:
+  # ... existing env vars ...
+  - name: VIKUNJA_AUTH_LOCAL_ENABLED
+    value: "false"                         # disable local login; SSO only
+  - name: VIKUNJA_AUTH_OPENID_ENABLED
+    value: "true"
+  - name: VIKUNJA_AUTH_OPENID_REDIRECTURL
+    value: "https://vikunja.example.com/auth/openid/"
+  - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_NAME
+    value: Keycloak
+  - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_AUTHURL
+    value: https://keycloak.example.com/realms/myrealm
+  - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_CLIENTID
+    value: vikunja
+  - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_SCOPE
+    value: "openid profile email"
+```
+
+Replace `KEYCLOAK` in the variable names with the uppercased provider ID you want. The redirect URL for your identity provider must end with `/auth/openid/<provider-id>` (lowercase). For example, with provider ID `keycloak`, the redirect URL registered in Keycloak should be `https://vikunja.example.com/auth/openid/keycloak`.
+
+The client secret (`VIKUNJA_AUTH_OPENID_PROVIDERS_<ID>_CLIENTSECRET`) must **not** be set in `env`. It is injected via `envFrom` from the Secret the platform chart provisions — see the [ExternalSecrets section](./helm-platform.md#externalsecrets).
+
+### Disabling user registration
+
+When using SSO, you typically want to prevent random sign-ups. The chart sets `VIKUNJA_SERVICE_ENABLEREGISTRATION=false` by default. Set it to `"true"` only if you want local account creation alongside SSO.
+
 ### Injecting secrets
 
 Don't put credentials in `env`. Use `envFrom` to pull from a `Secret` — typically the one populated by the platform chart's `ExternalSecret`:
@@ -59,7 +94,7 @@ envFrom:
       name: vikunja
 ```
 
-The platform chart's defaults populate that Secret with `VIKUNJA_DATABASE_PASSWORD` and `VIKUNJA_SERVICE_JWTSECRET`. See the [platform chart docs](./helm-platform.md#externalsecrets) for the data mapping.
+The platform chart's defaults populate that Secret with `VIKUNJA_DATABASE_PASSWORD`, `VIKUNJA_SERVICE_JWTSECRET`, and (when uncommented) `VIKUNJA_AUTH_OPENID_PROVIDERS_<ID>_CLIENTSECRET`. See the [platform chart docs](./helm-platform.md#externalsecrets) for the data mapping.
 
 ## Persistence
 

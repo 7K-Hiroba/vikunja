@@ -59,6 +59,11 @@ spec:
             - secretKey: VIKUNJA_SERVICE_JWTSECRET
               remoteKey: vikunja/service
               property: jwtSecret
+            # -- OIDC client secret. Uncomment and adjust the provider ID
+            # to match the base chart env vars.
+            # - secretKey: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_CLIENTSECRET
+            #   remoteKey: vikunja/oidc
+            #   property: clientSecret
   destination:
     server: https://kubernetes.default.svc
     namespace: vikunja

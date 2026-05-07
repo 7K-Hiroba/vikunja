@@ -88,9 +88,29 @@ externalSecrets:
     - secretKey: VIKUNJA_SERVICE_JWTSECRET
       remoteKey: vikunja/service
       property: jwtSecret
+    # -- OIDC client secret. Uncomment and adjust the provider ID to match
+    # the base chart env vars.
+    # - secretKey: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_CLIENTSECRET
+    #   remoteKey: vikunja/oidc
+    #   property: clientSecret
 ```
 
 The keys (`VIKUNJA_DATABASE_PASSWORD`, `VIKUNJA_SERVICE_JWTSECRET`) match Vikunja's environment variable names exactly, so a single `envFrom: secretRef:` is enough on the workload side.
+
+### OIDC client secret
+
+When OpenID Connect is enabled in the [base chart](./helm-base.md#openid-connect-sso), the provider's client secret must be stored in the upstream secret store and mapped here. The `secretKey` must match the env var name Vikunja expects: `VIKUNJA_AUTH_OPENID_PROVIDERS_<PROVIDER_ID>_CLIENTSECRET`, where `<PROVIDER_ID>` is the uppercased provider key used in the base chart's env vars (e.g. `KEYCLOAK`).
+
+```yaml
+externalSecrets:
+  data:
+    # ... existing mappings ...
+    - secretKey: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_CLIENTSECRET
+      remoteKey: vikunja/oidc
+      property: clientSecret
+```
+
+Adjust `remoteKey` and `property` to point to where your secret store keeps the OIDC client secret for Vikunja.
 
 ### Wiring back into the base chart
 

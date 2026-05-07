@@ -33,7 +33,7 @@ Each section is gated behind `<resource>.enabled` (default `false`). Enabling a 
 | Resource | Provided when | Purpose |
 | --- | --- | --- |
 | CNPG `Cluster` | `postgres.enabled` | Database `vikunja` owned by role `vikunja`, reachable at `<release>-pg-rw` |
-| `ExternalSecret` | `externalSecrets.enabled` | Mirrors `vikunja/postgres` and `vikunja/service` from your secret store into a Secret named `vikunja` (consumed by the base chart's `envFrom`) |
+| `ExternalSecret` | `externalSecrets.enabled` | Mirrors `vikunja/postgres` and `vikunja/service` from your secret store into a Secret named `vikunja` (consumed by the base chart's `envFrom`); add OIDC client secret mapping as needed |
 | `ServiceMonitor` | `observability.serviceMonitor.enabled` | Scrapes `/metrics` on the workload's `http` port (Vikunja must have `VIKUNJA_SERVICE_ENABLEMETRICS=true`) |
 | `PrometheusRule` | `observability.prometheusRules.enabled` | `VikunjaTargetDown`, `VikunjaHighErrorRate`, `VikunjaHighLatency` |
 | Grafana dashboard | `observability.grafanaDashboard.enabled` | Shipped as a `ConfigMap` with the sidecar discovery label |
@@ -60,6 +60,12 @@ The default `data` mappings produce these keys (matching Vikunja env var names):
 
 - `VIKUNJA_DATABASE_PASSWORD` ← `vikunja/postgres` → `password`
 - `VIKUNJA_SERVICE_JWTSECRET` ← `vikunja/service` → `jwtSecret`
+
+Add an OIDC client secret mapping when SSO is enabled in the base chart:
+
+- `VIKUNJA_AUTH_OPENID_PROVIDERS_<PROVIDER_ID>_CLIENTSECRET` ← your remote key → `clientSecret`
+
+See the [full docs](https://hiroba.7kgroup.org/docs/apps/vikunja/helm-platform) for details.
 
 ## Part of the Hiroba ecosystem
 
