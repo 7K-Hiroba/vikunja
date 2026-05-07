@@ -142,18 +142,41 @@ s3:
   enabled: true
   endpoint: "http://garage.garage.svc.cluster.local:3900"
   bucket: vikunja-files
-  region: ""                  # optional — leave empty for Garage
+  region: garage               # required — the AWS SDK needs a region even for non-AWS endpoints
+  usePathStyle: true          # required for Garage, MinIO, and most self-hosted S3
   existingSecret:
     name: vikunja-s3-key      # Secret created by the platform chart's Garage integration
-    accessKeyKey: AWS_ACCESS_KEY_ID
-    secretKeyKey: AWS_SECRET_ACCESS_KEY
+    accessKeyKey: access-key-id
+    secretKeyKey: secret-access-key
 ```
 
 When `s3.enabled: true`:
 
-- The chart injects `VIKUNJA_FILES_S3_ENDPOINT`, `VIKUNJA_FILES_S3_BUCKET`, and (when set) `VIKUNJA_FILES_S3_REGION` as env vars.
+- The chart injects `VIKUNJA_FILES_TYPE=s3`, `VIKUNJA_FILES_S3_ENDPOINT`, `VIKUNJA_FILES_S3_BUCKET`, and (when set) `VIKUNJA_FILES_S3_REGION` and `VIKUNJA_FILES_S3_USEPATHSTYLE` as env vars.
 - Credentials are pulled from the referenced Secret via `VIKUNJA_FILES_S3_ACCESSKEY` / `VIKUNJA_FILES_S3_SECRETKEY`.
 - The PVC is **not** created even if `persistence.files.enabled` is `true`; an `emptyDir` is used instead.
+
+### Declaring S3 in a config file
+
+Vikunja uses Viper for configuration, which cannot discover the `files.s3` section from environment variables alone. The `s3` key **must** be declared in a `config.yml` file so Viper knows to look for the `VIKUNJA_FILES_S3_*` env vars — the same pattern used for OIDC providers. The chart supports this via the `configMap` value:
+
+```yaml
+configMap:
+  enabled: true
+  data:
+    config.yml: |
+      files:
+        type: s3
+        s3:
+          usepathstyle: true
+      auth:            # combine with existing OIDC config
+        openid:
+          enabled: true
+          providers:
+            keycloak:
+```
+
+The file only needs the `files.type` and `files.s3` keys — Viper cannot discover them from environment variables alone, so they must be declared here. All actual values (endpoint, bucket, accesskey, secretkey, region) come from `env` and `envFrom` and override the empty file entries at runtime.
 - The `VIKUNJA_FILES_BASEPATH` env var remains set (harmless) but Vikunja reads/writes files from S3.
 
 See the [platform chart S3 section](./helm-platform.md#s3-storage) for wiring the bucket and credentials.

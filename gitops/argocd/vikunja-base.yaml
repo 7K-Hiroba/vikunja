@@ -29,10 +29,11 @@ spec:
           enabled: true
           endpoint: "http://garage.garage.svc.cluster.local:3900"
           bucket: vikunja-files
+          usePathStyle: true
           existingSecret:
-            name: vikunja-s3-key
-            accessKeyKey: AWS_ACCESS_KEY_ID
-            secretKeyKey: AWS_SECRET_ACCESS_KEY
+           name: vikunja-s3-key
+           accessKeyKey: AWS_ACCESS_KEY_ID
+           secretKeyKey: AWS_SECRET_ACCESS_KEY
         env:
           - name: VIKUNJA_SERVICE_PUBLICURL
             value: "https://vikunja.example.com"
@@ -68,15 +69,17 @@ spec:
           #   value: vikunja
           # - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_SCOPE
           #   value: "openid profile email"
-        # configMap:
-        #   enabled: true
-        #   data:
-        #     config.yml: |
-        #       auth:
-        #         openid:
-        #           enabled: true
-        #           providers:
-        #             keycloak:
+         # configMap:
+         #   enabled: true
+         #   data:
+         #     config.yml: |
+         #       files:
+         #         s3:
+         #       auth:
+         #         openid:
+         #           enabled: true
+         #           providers:
+         #             keycloak:
         envFrom:
           - secretRef:
               name: vikunja

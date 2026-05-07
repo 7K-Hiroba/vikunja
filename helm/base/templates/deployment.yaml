@@ -61,6 +61,8 @@ spec:
                   key: {{ .Values.database.existingPasswordSecret.key }}
             {{- end }}
             {{- if .Values.s3.enabled }}
+            - name: VIKUNJA_FILES_TYPE
+              value: s3
             - name: VIKUNJA_FILES_S3_ENDPOINT
               value: {{ .Values.s3.endpoint | quote }}
             - name: VIKUNJA_FILES_S3_BUCKET
@@ -68,6 +70,10 @@ spec:
             {{- if .Values.s3.region }}
             - name: VIKUNJA_FILES_S3_REGION
               value: {{ .Values.s3.region | quote }}
+            {{- end }}
+            {{- if .Values.s3.usePathStyle }}
+            - name: VIKUNJA_FILES_S3_USEPATHSTYLE
+              value: {{ .Values.s3.usePathStyle | quote }}
             {{- end }}
             {{- if .Values.s3.existingSecret.name }}
             - name: VIKUNJA_FILES_S3_ACCESSKEY

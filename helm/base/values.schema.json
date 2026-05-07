@@ -202,6 +202,7 @@
         "endpoint": { "type": "string" },
         "bucket": { "type": "string" },
         "region": { "type": "string" },
+        "usePathStyle": { "type": "boolean" },
         "existingSecret": {
           "type": "object",
           "properties": {

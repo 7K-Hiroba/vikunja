@@ -125,14 +125,29 @@ persistence:
 # S3-compatible object storage for Vikunja's uploaded files. When enabled,
 # Vikunja reads and writes files from S3 instead of the local filesystem,
 # the PVC above is skipped, and scaling beyond one replica becomes safe.
+# Vikunja uses Viper for configuration, which cannot discover the S3
+# section from environment variables alone. You MUST declare the files.s3
+# key in the configMap so Viper knows to look for VIKUNJA_FILES_S3_* env
+# vars — the same pattern used for OIDC providers. Example:
+#   configMap:
+#     enabled: true
+#     data:
+#       config.yml: |
+#         files:
+#           s3:
 s3:
   enabled: false
   # S3 endpoint URL. Required. For Garage: http://garage.garage.svc.cluster.local:3900
   endpoint: ""
   # S3 bucket name. Required.
   bucket: ""
-  # S3 region. Optional — leave empty for Garage or other endpoint-only services.
+  # S3 region. Required — the AWS SDK needs a region even for non-AWS
+  # endpoints like Garage. Use "garage" for self-hosted Garage clusters.
   region: ""
+  # Use path-style addressing (https://endpoint/bucket/key instead of
+  # https://bucket.endpoint/key). Required for Garage, MinIO, and most
+  # self-hosted S3 services. AWS S3 uses virtual-hosted-style by default.
+  usePathStyle: true
   # Reference a Kubernetes Secret that holds the S3 access key and secret key.
   # The platform chart's Garage integration creates a Secret named
   # <app>-s3-key with keys AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
