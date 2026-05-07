@@ -49,6 +49,10 @@ postgres:
     retentionPolicy: "7d"
     garage:
       clusterRef: garage
+      # -- Namespace of the GarageCluster for backups. Set when the cluster
+      # lives in a different namespace — a GarageReferenceGrant is created
+      # automatically to permit cross-namespace access.
+      clusterRefNamespace: ""
       endpoint: "http://garage.garage.svc.cluster.local:3900"
 
 # -- S3-compatible object storage. When enabled, the base chart switches
@@ -80,6 +84,10 @@ s3:
   # -- Garage-specific settings (provider: garage)
   garage:
     clusterRef: garage
+    # -- Namespace of the GarageCluster. Set when the cluster lives in a
+    # different namespace than this release — a GarageReferenceGrant is
+    # created automatically to permit cross-namespace access.
+    clusterRefNamespace: ""
     # -- S3 endpoint URL. Pass this to the base chart's s3.endpoint value
     # so Vikunja can reach the Garage API.
     endpoint: "http://garage.garage.svc.cluster.local:3900"
