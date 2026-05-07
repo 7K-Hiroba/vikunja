@@ -24,7 +24,7 @@ home: https://github.com/7K-Hiroba/vikunja
 sources:
   - https://github.com/7K-Hiroba/vikunja
   - https://vikunja.io
-icon: https://vikunja.io/images/vikunja-logo.svg
+icon: https://cdn.jsdelivr.net/gh/selfhst/icons@main/svg/vikunja.svg
 annotations:
   artifacthub.io/license: Apache-2.0
   artifacthub.io/links: |
