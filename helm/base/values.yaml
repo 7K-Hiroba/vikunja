@@ -95,20 +95,6 @@ podDisruptionBudget:
   minAvailable: 1
   # maxUnavailable: 1
 
-# Vikunja requires a config.yml to declare OIDC provider keys — Viper
-# (the config library) only discovers providers that appear in the file.
-# Env vars override the values at runtime, but the key itself must exist.
-# When disabled, no ConfigMap is created and no volume is mounted.
-configMap:
-  enabled: false
-  data: {}
-  #  config.yml: |
-  #    auth:
-  #      openid:
-  #        enabled: true
-  #        providers:
-  #          keycloak:
-
 # Persistent storage for Vikunja's uploaded files. When disabled the chart
 # falls back to an emptyDir and uploads are lost on pod restart.
 # Ignored when s3.enabled is true — S3 takes over file storage and this PVC
@@ -125,16 +111,6 @@ persistence:
 # S3-compatible object storage for Vikunja's uploaded files. When enabled,
 # Vikunja reads and writes files from S3 instead of the local filesystem,
 # the PVC above is skipped, and scaling beyond one replica becomes safe.
-# Vikunja uses Viper for configuration, which cannot discover the S3
-# section from environment variables alone. You MUST declare the files.s3
-# key in the configMap so Viper knows to look for VIKUNJA_FILES_S3_* env
-# vars — the same pattern used for OIDC providers. Example:
-#   configMap:
-#     enabled: true
-#     data:
-#       config.yml: |
-#         files:
-#           s3:
 s3:
   enabled: false
   # S3 endpoint URL. Required. For Garage: http://garage.garage.svc.cluster.local:3900

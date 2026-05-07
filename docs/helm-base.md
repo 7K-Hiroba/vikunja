@@ -80,24 +80,6 @@ Replace `KEYCLOAK` in the variable names with the uppercased provider ID you wan
 
 The client secret (`VIKUNJA_AUTH_OPENID_PROVIDERS_<ID>_CLIENTSECRET`) must **not** be set in `env`. It is injected via `envFrom` from the Secret the platform chart provisions — see the [ExternalSecrets section](./helm-platform.md#externalsecrets).
 
-### Declaring OIDC providers in a config file
-
-Vikunja uses Viper for configuration, which cannot discover provider keys from environment variables alone. The provider key (e.g. `keycloak`) **must** be declared in a `config.yml` file so Viper knows to look for the associated env vars. The chart supports this via the `configMap` value:
-
-```yaml
-configMap:
-  enabled: true
-  data:
-    config.yml: |
-      auth:
-        openid:
-          enabled: true
-          providers:
-            keycloak:
-```
-
-The file only needs the provider key — all actual values (name, authurl, clientid, scope, clientsecret) come from `env` and `envFrom` and override the empty file entries at runtime. Mounting is automatic: the chart creates a ConfigMap, mounts it at `/app/vikunja/config.yml`, and Vikunja picks it up on startup.
-
 ### Disabling user registration
 
 When using SSO, you typically want to prevent random sign-ups. The chart sets `VIKUNJA_SERVICE_ENABLEREGISTRATION=false` by default. Set it to `"true"` only if you want local account creation alongside SSO.
@@ -155,29 +137,6 @@ When `s3.enabled: true`:
 - The chart injects `VIKUNJA_FILES_TYPE=s3`, `VIKUNJA_FILES_S3_ENDPOINT`, `VIKUNJA_FILES_S3_BUCKET`, and (when set) `VIKUNJA_FILES_S3_REGION` and `VIKUNJA_FILES_S3_USEPATHSTYLE` as env vars.
 - Credentials are pulled from the referenced Secret via `VIKUNJA_FILES_S3_ACCESSKEY` / `VIKUNJA_FILES_S3_SECRETKEY`.
 - The PVC is **not** created even if `persistence.files.enabled` is `true`; an `emptyDir` is used instead.
-
-### Declaring S3 in a config file
-
-Vikunja uses Viper for configuration, which cannot discover the `files.s3` section from environment variables alone. The `s3` key **must** be declared in a `config.yml` file so Viper knows to look for the `VIKUNJA_FILES_S3_*` env vars — the same pattern used for OIDC providers. The chart supports this via the `configMap` value:
-
-```yaml
-configMap:
-  enabled: true
-  data:
-    config.yml: |
-      files:
-        type: s3
-        s3:
-          usepathstyle: true
-      auth:            # combine with existing OIDC config
-        openid:
-          enabled: true
-          providers:
-            keycloak:
-```
-
-The file only needs the `files.type` and `files.s3` keys — Viper cannot discover them from environment variables alone, so they must be declared here. All actual values (endpoint, bucket, accesskey, secretkey, region) come from `env` and `envFrom` and override the empty file entries at runtime.
-- The `VIKUNJA_FILES_BASEPATH` env var remains set (harmless) but Vikunja reads/writes files from S3.
 
 See the [platform chart S3 section](./helm-platform.md#s3-storage) for wiring the bucket and credentials.
 

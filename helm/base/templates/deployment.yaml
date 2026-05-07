@@ -98,12 +98,6 @@ spec:
               mountPath: /tmp
             - name: files
               mountPath: /app/vikunja/files
-            {{- if .Values.configMap.enabled }}
-            - name: config
-              mountPath: /app/vikunja/config.yml
-              subPath: config.yml
-              readOnly: true
-            {{- end }}
             {{- with .Values.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -117,11 +111,6 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
-        {{- if .Values.configMap.enabled }}
-        - name: config
-          configMap:
-            name: {{ include "app.fullname" . }}-config
-        {{- end }}
         {{- with .Values.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
