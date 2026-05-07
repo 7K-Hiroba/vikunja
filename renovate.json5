@@ -27,7 +27,7 @@
         "repository:\\s*[\"']?(?<depName>[a-zA-Z0-9.\\-_/:]+?)[\"']?\\s*(?:#[^\\n]*)?\\n(?:\\s*[a-zA-Z][a-zA-Z0-9]*:[^\\n]*\\n){0,5}?\\s*tag:\\s*[\"']?(?<currentValue>[a-zA-Z0-9.\\-_+]+)[\"']?"
       ],
       "datasourceTemplate": "docker"
-    }
+    },
     {
       customType: 'regex',
       description: 'Vikunja container image in helm/base values (repository + tag)',
