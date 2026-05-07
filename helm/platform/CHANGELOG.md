@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.1 (2026-05-07)
+
+## What's Changed
+* fix: add bucket region to objectstore to use garage s3 bucket by @joaodss2 in https://github.com/7K-Hiroba/vikunja/pull/17
+
+
+**Full Changelog**: https://github.com/7K-Hiroba/vikunja/compare/helm-platform-v1.1.0...helm-platform-v1.1.1
+
 ## 1.1.0 (2026-05-07)
 
 ## What's Changed
