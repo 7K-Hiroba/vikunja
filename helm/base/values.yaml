@@ -1,9 +1,10 @@
 # Default values for vikunja
 # Vikunja: open-source, self-hostable to-do app — https://vikunja.io
 
-# Single replica is the safe default — Vikunja stores uploaded files on disk
-# (see persistence.files below). Scaling beyond 1 requires either an RWX
-# volume or a sync mechanism for /app/vikunja/files.
+# Single replica is the safe default when using PVC (ReadWriteOnce) for file
+# storage. When S3 is enabled instead (see s3 below), Vikunja stores files in
+# an object store and multiple replicas can serve traffic simultaneously —
+# enabling autoscaling and PodDisruptionBudget.
 replicaCount: 1
 
 image:
@@ -80,8 +81,9 @@ readinessProbe:
   periodSeconds: 10
   timeoutSeconds: 3
 
-# Autoscaling is OFF by default. Enabling it without RWX file storage causes
-# file-upload inconsistency between replicas.
+# Autoscaling is OFF by default. When using PVC storage, only a single
+# replica can mount a ReadWriteOnce volume, so scaling is unsafe.
+# When S3 is enabled instead, file storage is shared and autoscaling works.
 autoscaling:
   enabled: false
   minReplicas: 1
@@ -109,6 +111,8 @@ configMap:
 
 # Persistent storage for Vikunja's uploaded files. When disabled the chart
 # falls back to an emptyDir and uploads are lost on pod restart.
+# Ignored when s3.enabled is true — S3 takes over file storage and this PVC
+# is never created.
 persistence:
   files:
     enabled: false
@@ -117,6 +121,25 @@ persistence:
     storageClass: ""
     # Reuse an existing PVC instead of letting the chart create one.
     existingClaim: ""
+
+# S3-compatible object storage for Vikunja's uploaded files. When enabled,
+# Vikunja reads and writes files from S3 instead of the local filesystem,
+# the PVC above is skipped, and scaling beyond one replica becomes safe.
+s3:
+  enabled: false
+  # S3 endpoint URL. Required. For Garage: http://garage.garage.svc.cluster.local:3900
+  endpoint: ""
+  # S3 bucket name. Required.
+  bucket: ""
+  # S3 region. Optional — leave empty for Garage or other endpoint-only services.
+  region: ""
+  # Reference a Kubernetes Secret that holds the S3 access key and secret key.
+  # The platform chart's Garage integration creates a Secret named
+  # <app>-s3-key with keys AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
+  existingSecret:
+    name: ""
+    accessKeyKey: AWS_ACCESS_KEY_ID
+    secretKeyKey: AWS_SECRET_ACCESS_KEY
 
 # Vikunja config is supplied as environment variables — see
 # https://vikunja.io/docs/config-options/ for the full reference. The

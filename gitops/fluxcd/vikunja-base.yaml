@@ -28,11 +28,14 @@ spec:
         - name: default-gateway
       hostnames:
         - vikunja.example.com
-    persistence:
-      files:
-        enabled: true
-        size: 5Gi
-        accessMode: ReadWriteOnce
+    s3:
+      enabled: true
+      endpoint: "http://garage.garage.svc.cluster.local:3900"
+      bucket: vikunja-files
+      existingSecret:
+        name: vikunja-s3-key
+        accessKeyKey: AWS_ACCESS_KEY_ID
+        secretKeyKey: AWS_SECRET_ACCESS_KEY
     env:
       - name: VIKUNJA_SERVICE_PUBLICURL
         value: "https://vikunja.example.com"
@@ -50,8 +53,6 @@ spec:
         value: vikunja
       - name: VIKUNJA_DATABASE_SSLMODE
         value: require
-      - name: VIKUNJA_FILES_BASEPATH
-        value: /app/vikunja/files
       # -- OpenID Connect. Uncomment and fill in to enable SSO.
       # The client secret is pulled from the platform ExternalSecret.
       # IMPORTANT: Viper cannot discover OIDC providers from env vars alone.

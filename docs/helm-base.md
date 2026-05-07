@@ -130,6 +130,34 @@ persistence:
 
 When `enabled: false` (default), files live in an `emptyDir` and are lost on pod restart — fine for a quick demo, never for production.
 
+## S3 storage
+
+Instead of a PVC, Vikunja can store uploaded files in an S3-compatible object store (Garage, MinIO, AWS S3, etc.). This is the recommended approach for production because:
+
+1. **Files persist** across pod restarts without a PVC.
+2. **HA is possible** — multiple replicas share the same bucket, so autoscaling works safely.
+
+```yaml
+s3:
+  enabled: true
+  endpoint: "http://garage.garage.svc.cluster.local:3900"
+  bucket: vikunja-files
+  region: ""                  # optional — leave empty for Garage
+  existingSecret:
+    name: vikunja-s3-key      # Secret created by the platform chart's Garage integration
+    accessKeyKey: AWS_ACCESS_KEY_ID
+    secretKeyKey: AWS_SECRET_ACCESS_KEY
+```
+
+When `s3.enabled: true`:
+
+- The chart injects `VIKUNJA_FILES_S3_ENDPOINT`, `VIKUNJA_FILES_S3_BUCKET`, and (when set) `VIKUNJA_FILES_S3_REGION` as env vars.
+- Credentials are pulled from the referenced Secret via `VIKUNJA_FILES_S3_ACCESSKEY` / `VIKUNJA_FILES_S3_SECRETKEY`.
+- The PVC is **not** created even if `persistence.files.enabled` is `true`; an `emptyDir` is used instead.
+- The `VIKUNJA_FILES_BASEPATH` env var remains set (harmless) but Vikunja reads/writes files from S3.
+
+See the [platform chart S3 section](./helm-platform.md#s3-storage) for wiring the bucket and credentials.
+
 ## Ingress
 
 The base chart emits a Gateway API `HTTPRoute`. A parent `Gateway` (with listeners and TLS) is expected to be provided by the platform — typically a gateway chart such as `hiroba-gateway` — so this chart only owns the route itself.
@@ -154,7 +182,7 @@ The default catch-all sends all traffic to the service. Override `gateway.rules`
 
 ## Scaling
 
-Horizontal autoscaling is off by default and **should stay off** unless `/app/vikunja/files` is on RWX storage (or files are migrated out — Vikunja doesn't currently support an S3 backend).
+Horizontal autoscaling is off by default. With PVC storage (ReadWriteOnce), only one pod can mount the volume, so scaling is **unsafe**. When S3 is enabled, file storage is shared and autoscaling works — replicas are stateless with respect to file I/O.
 
 ```yaml
 autoscaling:

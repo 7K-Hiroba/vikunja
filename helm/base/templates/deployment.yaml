@@ -5,6 +5,7 @@ metadata:
   labels:
     {{- include "app.labels" . | nindent 4 }}
 spec:
+  revisionHistoryLimit: 3
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
@@ -47,7 +48,7 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          {{- if or .Values.env .Values.database.existingPasswordSecret.name }}
+          {{- if or .Values.env .Values.database.existingPasswordSecret.name .Values.s3.enabled }}
           env:
             {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
@@ -58,6 +59,28 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.database.existingPasswordSecret.name }}
                   key: {{ .Values.database.existingPasswordSecret.key }}
+            {{- end }}
+            {{- if .Values.s3.enabled }}
+            - name: VIKUNJA_FILES_S3_ENDPOINT
+              value: {{ .Values.s3.endpoint | quote }}
+            - name: VIKUNJA_FILES_S3_BUCKET
+              value: {{ .Values.s3.bucket | quote }}
+            {{- if .Values.s3.region }}
+            - name: VIKUNJA_FILES_S3_REGION
+              value: {{ .Values.s3.region | quote }}
+            {{- end }}
+            {{- if .Values.s3.existingSecret.name }}
+            - name: VIKUNJA_FILES_S3_ACCESSKEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.s3.existingSecret.name }}
+                  key: {{ .Values.s3.existingSecret.accessKeyKey }}
+            - name: VIKUNJA_FILES_S3_SECRETKEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.s3.existingSecret.name }}
+                  key: {{ .Values.s3.existingSecret.secretKeyKey }}
+            {{- end }}
             {{- end }}
           {{- end }}
           {{- with .Values.envFrom }}
@@ -82,7 +105,7 @@ spec:
         - name: tmp
           emptyDir: {}
         - name: files
-          {{- if .Values.persistence.files.enabled }}
+          {{- if and .Values.persistence.files.enabled (not .Values.s3.enabled) }}
           persistentVolumeClaim:
             claimName: {{ .Values.persistence.files.existingClaim | default (printf "%s-files" (include "app.fullname" .)) }}
           {{- else }}

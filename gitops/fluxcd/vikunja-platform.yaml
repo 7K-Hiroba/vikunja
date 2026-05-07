@@ -50,6 +50,7 @@ spec:
       bucketName: files
       garage:
         clusterRef: garage
+        endpoint: "http://garage.garage.svc.cluster.local:3900"
     externalSecrets:
       enabled: true
       refreshInterval: 1h

@@ -51,10 +51,15 @@ postgres:
       clusterRef: garage
       endpoint: "http://garage.garage.svc.cluster.local:3900"
 
-# -- S3-compatible object storage. Disabled by default — Vikunja stores
-# uploaded files on the workload pod's filesystem (see persistence.files in
-# helm/base). Enable this only if you need a bucket for backups, log
-# archival, or a future Vikunja S3 integration.
+# -- S3-compatible object storage. When enabled, the base chart switches
+# Vikunja from local filesystem storage to S3 — uploaded files go to the
+# bucket instead of a PVC. This also enables HA: multiple replicas can
+# safely serve traffic since all file I/O goes through the shared object store.
+#
+# The Garage provider creates a GarageBucket and GarageKey. The key's
+# Secret (<app>-s3-key, keys: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET)
+# is referenced by the base chart's s3.existingSecret to inject
+# VIKUNJA_FILES_S3_ACCESSKEY / VIKUNJA_FILES_S3_SECRETKEY into the pod.
 s3:
   enabled: false
   # -- Provider: "crossplane" | "garage"
@@ -75,6 +80,9 @@ s3:
   # -- Garage-specific settings (provider: garage)
   garage:
     clusterRef: garage
+    # -- S3 endpoint URL. Pass this to the base chart's s3.endpoint value
+    # so Vikunja can reach the Garage API.
+    endpoint: "http://garage.garage.svc.cluster.local:3900"
 
 # -- ExternalSecret. Mirrors a remote secret store entry into a Kubernetes
 # Secret named after the app (`vikunja`). The base chart's `envFrom`

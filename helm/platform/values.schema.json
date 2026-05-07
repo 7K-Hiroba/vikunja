@@ -97,6 +97,7 @@
           "type": "object",
           "properties": {
             "clusterRef": { "type": "string" },
+            "endpoint": { "type": "string" },
             "quotas": {
               "type": "object",
               "properties": {
