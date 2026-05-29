@@ -42,6 +42,10 @@ For a working install with the platform chart's defaults you'll also need:
 
 Full documentation is available at [hiroba.7kgroup.org/apps/vikunja](https://hiroba.7kgroup.org/apps/vikunja), or locally under [docs/](docs/).
 
+## Contributing
+
+Please read the [Contributing Guide](https://github.com/7K-Hiroba/Hiroba/blob/main/CONTRIBUTING.md) before opening pull requests.
+
 ## Part of the Hiroba ecosystem
 
-Scaffolded with [Hiroba](https://github.com/7K-Hiroba/Hiroba) by 7KGroup.
+Packaged with [Hiroba](https://github.com/7K-Hiroba/Hiroba) by 7KGroup.
