@@ -533,7 +533,7 @@
     "hiroba-app-lib": {
       "type": "object"
     },
-    "appConfig": {
+    "config": {
       "type": "object",
       "properties": {
         "enabled": {
