@@ -205,3 +205,8 @@ config:
 
 extraVolumes: []
 extraVolumeMounts: []
+
+# -- Mount ConfigMap(s) into the container as files
+appConfig:
+  enabled: false
+  configs: []
