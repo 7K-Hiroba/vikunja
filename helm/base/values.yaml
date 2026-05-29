@@ -189,5 +189,19 @@ envFrom: []
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+# -- Container args override. When empty, the container uses the image's default CMD.
+args: []
+
+# -- Mount ConfigMap(s) into the container as files
+config:
+  enabled: false
+  configs: []
+    # -- Name of the ConfigMap to mount. Defaults to fullname + "-app-config" when empty
+    # - configMapName: ""
+    #   mountPath: "/app/app-config.yaml"
+    #   subPath: "app-config.yaml"
+    #   readOnly: true
+
 extraVolumes: []
 extraVolumeMounts: []

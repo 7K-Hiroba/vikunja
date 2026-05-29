@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "app.fullname" . }}
+  name: {{ include "hiroba-app.fullname" . }}
   labels:
-    {{- include "app.labels" . | nindent 4 }}
+    {{- include "hiroba-app.labels" . | nindent 4 }}
 spec:
   revisionHistoryLimit: 3
   {{- if not .Values.autoscaling.enabled }}
@@ -11,7 +11,7 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "app.selectorLabels" . | nindent 6 }}
+      {{- include "hiroba-app.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -19,13 +19,13 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "app.labels" . | nindent 8 }}
+        {{- include "hiroba-app.labels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "app.serviceAccountName" . }}
+      serviceAccountName: {{ include "hiroba-app.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -107,7 +107,7 @@ spec:
         - name: files
           {{- if and .Values.persistence.files.enabled (not .Values.s3.enabled) }}
           persistentVolumeClaim:
-            claimName: {{ .Values.persistence.files.existingClaim | default (printf "%s-files" (include "app.fullname" .)) }}
+            claimName: {{ .Values.persistence.files.existingClaim | default (printf "%s-files" (include "hiroba-app.fullname" .)) }}
           {{- else }}
           emptyDir: {}
           {{- end }}
