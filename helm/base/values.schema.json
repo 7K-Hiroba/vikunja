@@ -177,6 +177,9 @@
             "type": "string"
           }
         },
+        "defaultFilters": {
+          "type": "array"
+        },
         "rules": {
           "type": "array"
         }
@@ -289,6 +292,9 @@
         }
       }
     },
+    "startupProbe": {
+      "type": "object"
+    },
     "autoscaling": {
       "type": "object",
       "properties": {
@@ -307,6 +313,13 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 100
+        },
+        "scaleTargetKind": {
+          "type": "string",
+          "enum": [
+            "Deployment",
+            "StatefulSet"
+          ]
         }
       },
       "additionalProperties": false
@@ -362,6 +375,36 @@
             }
           },
           "additionalProperties": false
+        },
+        "claims": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "size": {
+                "type": "string"
+              },
+              "accessMode": {
+                "type": "string"
+              },
+              "storageClass": {
+                "type": "string"
+              },
+              "existingClaim": {
+                "type": "string"
+              },
+              "mountPath": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
         }
       },
       "additionalProperties": false
@@ -530,36 +573,36 @@
         }
       }
     },
-    "hiroba-app-lib": {
-      "type": "object"
-    },
-    "config": {
+    "statefulset": {
       "type": "object",
       "properties": {
-        "enabled": {
-          "type": "boolean"
+        "serviceName": {
+          "type": "string"
         },
-        "configs": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "configMapName": {
-                "type": "string"
-              },
-              "mountPath": {
-                "type": "string"
-              },
-              "subPath": {
-                "type": "string"
-              },
-              "readOnly": {
-                "type": "boolean"
-              }
-            }
-          }
+        "podManagementPolicy": {
+          "type": "string",
+          "enum": [
+            "OrderedReady",
+            "Parallel"
+          ]
+        },
+        "updateStrategy": {
+          "type": "object"
+        },
+        "volumeClaimTemplates": {
+          "type": "array"
         }
+      },
+      "additionalProperties": false
+    },
+    "extraDeploy": {
+      "type": "array",
+      "items": {
+        "type": "string"
       }
+    },
+    "hiroba-app-lib": {
+      "type": "object"
     }
   },
   "additionalProperties": false

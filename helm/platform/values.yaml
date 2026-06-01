@@ -40,6 +40,14 @@ postgres:
   database: vikunja
   # -- Database role that owns the database.
   owner: vikunja
+  # -- CNPG plugins applied to the cluster. The barman-cloud plugin is
+  # automatically configured when backup is enabled; add others here.
+  plugins: []
+  #  - name: barman-cloud.cloudnative-pg.io
+  #    enabled: true
+  #    isWALArchiver: false
+  #    parameters:
+  #      barmanObjectName: ""
   # -- Backup configuration. Requires an S3 bucket and credentials in a
   # Secret named `<release>-pg-backup-creds` (keys: ACCESS_KEY_ID,
   # ACCESS_SECRET_KEY).
@@ -47,6 +55,12 @@ postgres:
     enabled: false
     schedule: "0 2 * * *"
     retentionPolicy: "7d"
+    # -- Pre-existing secret containing S3 credentials.
+    credentialsSecret:
+      name: ""
+      accessKeyKey: accessKeyId
+      secretKeyKey: secretAccessKey
+      regionKey: region
     garage:
       clusterRef: garage
       # -- Namespace of the GarageCluster for backups. Set when the cluster
@@ -94,6 +108,40 @@ s3:
     # -- S3 endpoint URL. Pass this to the base chart's s3.endpoint value
     # so Vikunja can reach the Garage API.
     endpoint: "http://garage.garage.svc.cluster.local:3900"
+  # -- List of S3 buckets to provision. All use the same provider.
+  buckets: []
+  #  - name: files
+  #    acl: private
+
+# -- Redis-compatible cache / queue resources.
+redis:
+  enabled: false
+  provider: dragonfly
+  dragonfly:
+    replicas: 1
+    image: docker.io/dragonflydb/dragonfly:latest
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    snapshot:
+      cron: "0 */6 * * *"
+      dir: /snapshots
+      enableOnMasterOnly: false
+      existingPersistentVolumeClaimName: ""
+      persistentVolumeClaimSpec:
+        storageClassName: ""
+        resources:
+          requests:
+            storage: 5Gi
+    serviceSpec:
+      type: ClusterIP
+    labels: {}
+    args: []
+    env: []
 
 # -- ExternalSecret. Mirrors a remote secret store entry into a Kubernetes
 # Secret named after the app (`vikunja`). The base chart's `envFrom`
@@ -156,36 +204,36 @@ observability:
   prometheusRules:
     enabled: false
     groups:
-      - name: '{{ include "platform.name" . }}.rules'
+      - name: '{{ include "hiroba-platform.name" . }}.rules'
         rules:
           - alert: VikunjaTargetDown
             expr: |
-              up{namespace="{{ .Release.Namespace }}", service="{{ include "platform.name" . }}"} == 0
+              up{namespace="{{ .Release.Namespace }}", service="{{ include "hiroba-platform.name" . }}"} == 0
             for: 5m
             labels:
               severity: critical
             annotations:
-              summary: '{{ include "platform.name" . }} target is down'
-              description: "Prometheus has been unable to scrape {{ include `platform.name` . }} in namespace {{ .Release.Namespace }} for 5 minutes."
+              summary: '{{ include "hiroba-platform.name" . }} target is down'
+              description: "Prometheus has been unable to scrape {{ include `hiroba-platform.name` . }} in namespace {{ .Release.Namespace }} for 5 minutes."
           - alert: VikunjaHighErrorRate
             expr: |
-              sum(rate(http_requests_total{namespace="{{ .Release.Namespace }}", service="{{ include "platform.name" . }}", status=~"5.."}[5m]))
+              sum(rate(http_requests_total{namespace="{{ .Release.Namespace }}", service="{{ include "hiroba-platform.name" . }}", status=~"5.."}[5m]))
               /
-              sum(rate(http_requests_total{namespace="{{ .Release.Namespace }}", service="{{ include "platform.name" . }}"}[5m]))
+              sum(rate(http_requests_total{namespace="{{ .Release.Namespace }}", service="{{ include "hiroba-platform.name" . }}"}[5m]))
               > 0.05
             for: 5m
             labels:
               severity: warning
             annotations:
-              summary: 'High error rate for {{ include "platform.name" . }}'
+              summary: 'High error rate for {{ include "hiroba-platform.name" . }}'
               description: "Vikunja is returning 5xx for more than 5% of requests over the last 5 minutes."
           - alert: VikunjaHighLatency
             expr: |
-              histogram_quantile(0.99, sum by (le) (rate(http_request_duration_seconds_bucket{namespace="{{ .Release.Namespace }}", service="{{ include "platform.name" . }}"}[5m])))
+              histogram_quantile(0.99, sum by (le) (rate(http_request_duration_seconds_bucket{namespace="{{ .Release.Namespace }}", service="{{ include "hiroba-platform.name" . }}"}[5m])))
               > 1
             for: 5m
             labels:
               severity: warning
             annotations:
-              summary: 'High p99 latency for {{ include "platform.name" . }}'
+              summary: 'High p99 latency for {{ include "hiroba-platform.name" . }}'
               description: "Vikunja API p99 latency is above 1s for the last 5 minutes."

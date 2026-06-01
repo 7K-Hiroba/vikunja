@@ -19,7 +19,7 @@ tests:
       apiVersions: []
     asserts:
       - failedTemplate:
-          errorMessage: "s3.enabled is true with provider 'crossplane' but the Crossplane S3 CRD (s3.aws.crossplane.io/v1beta1) is not installed. Install Crossplane with the AWS S3 provider first, or switch to s3.provider=garage, or set s3.enabled=false."
+          errorMessage: "s3.enabled is true with provider 'crossplane' but the Crossplane S3 CRD (s3.aws.crossplane.io/v1beta1) is not installed. Install Crossplane with the AWS S3 provider first, or switch to provider=garage, or set s3.enabled=false."
 
   - it: fails when s3 with garage provider is enabled without Garage Operator CRD
     set:
@@ -30,7 +30,7 @@ tests:
       apiVersions: []
     asserts:
       - failedTemplate:
-          errorMessage: "s3.enabled is true with provider 'garage' but the Garage Operator CRD (garage.rajsingh.info/v1beta1) is not installed. Install the garage-operator first or set s3.enabled=false."
+          errorMessage: "s3.enabled is true with provider 'garage' but the Garage Operator CRD (garage.rajsingh.info/v1beta1) is not installed. Install the garage-operator first (helm install garage-operator oci://ghcr.io/rajsinghtech/charts/garage-operator), or switch to provider=crossplane, or set s3.enabled=false."
 
   - it: fails when postgres backup is enabled without Garage Operator CRD
     set:
@@ -40,7 +40,7 @@ tests:
         - postgresql.cnpg.io/v1
     asserts:
       - failedTemplate:
-          errorMessage: "postgres.backup.enabled is true but the Garage Operator CRD (garage.rajsingh.info/v1beta1) is not installed. Install the garage-operator first or set postgres.backup.enabled=false."
+          errorMessage: "postgres.backup.enabled is true but the Garage Operator CRD (garage.rajsingh.info/v1beta1) is not installed. Install the garage-operator first (helm install garage-operator oci://ghcr.io/rajsinghtech/charts/garage-operator), or set postgres.backup.enabled=false."
 
   - it: passes when all features disabled
     set:

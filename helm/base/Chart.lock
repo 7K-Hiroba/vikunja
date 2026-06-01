@@ -1,7 +1,0 @@
-generated: 2026-05-30T09:52:05.129320515Z
-dependencies:
-  - name: hiroba-app-lib
-    repository: oci://harbor.7kgroup.org/7khiroba/charts
-    version: 0.3.0
-digest: sha256:placeholder
-tested: false
