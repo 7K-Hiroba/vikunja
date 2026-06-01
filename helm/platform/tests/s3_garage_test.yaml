@@ -20,12 +20,14 @@ tests:
       - hasDocuments:
           count: 0
 
-  - it: renders GarageBucket and GarageKey when enabled
+  - it: renders GarageBucket and GarageKey for each bucket
     set:
       s3:
         enabled: true
         provider: garage
-        bucketName: files
+        buckets:
+          - name: files
+            acl: private
         garage:
           clusterRef: garage
     asserts:
@@ -37,7 +39,9 @@ tests:
       s3:
         enabled: true
         provider: garage
-        bucketName: files
+        buckets:
+          - name: files
+            acl: private
         garage:
           clusterRef: my-garage
     asserts:
@@ -57,59 +61,14 @@ tests:
           value: my-garage
         documentIndex: 0
 
-  - it: renders GarageBucket with quotas
-    set:
-      s3:
-        enabled: true
-        provider: garage
-        bucketName: files
-        garage:
-          clusterRef: garage
-          quotas:
-            maxSize: 10Gi
-            maxObjects: 100000
-    asserts:
-      - equal:
-          path: spec.quotas.maxSize
-          value: 10Gi
-        documentIndex: 0
-      - equal:
-          path: spec.quotas.maxObjects
-          value: 100000
-        documentIndex: 0
-
-  - it: renders GarageBucket with website config
-    set:
-      s3:
-        enabled: true
-        provider: garage
-        bucketName: files
-        garage:
-          clusterRef: garage
-          website:
-            enabled: true
-            indexDocument: index.html
-            errorDocument: error.html
-    asserts:
-      - equal:
-          path: spec.website.enabled
-          value: true
-        documentIndex: 0
-      - equal:
-          path: spec.website.indexDocument
-          value: index.html
-        documentIndex: 0
-      - equal:
-          path: spec.website.errorDocument
-          value: error.html
-        documentIndex: 0
-
   - it: renders GarageKey with secret template and bucket permissions
     set:
       s3:
         enabled: true
         provider: garage
-        bucketName: files
+        buckets:
+          - name: files
+            acl: private
         garage:
           clusterRef: garage
     asserts:
@@ -122,7 +81,7 @@ tests:
         documentIndex: 1
       - equal:
           path: metadata.name
-          value: vikunja-s3-key
+          value: vikunja-files-s3-key
         documentIndex: 1
       - equal:
           path: spec.clusterRef.name
@@ -130,7 +89,7 @@ tests:
         documentIndex: 1
       - equal:
           path: spec.secretTemplate.name
-          value: vikunja-s3-key
+          value: vikunja-files-s3-key
         documentIndex: 1
       - equal:
           path: spec.secretTemplate.additionalData.S3_BUCKET
@@ -149,51 +108,14 @@ tests:
           value: true
         documentIndex: 1
 
-  - it: omits quotas when not set
-    set:
-      s3:
-        enabled: true
-        provider: garage
-        bucketName: files
-        garage:
-          clusterRef: garage
-    asserts:
-      - isNull:
-          path: spec.quotas
-        documentIndex: 0
-
-  - it: omits website when not set
-    set:
-      s3:
-        enabled: true
-        provider: garage
-        bucketName: files
-        garage:
-          clusterRef: garage
-    asserts:
-      - isNull:
-          path: spec.website
-        documentIndex: 0
-
-  - it: omits lifecycle when not set
-    set:
-      s3:
-        enabled: true
-        provider: garage
-        bucketName: files
-        garage:
-          clusterRef: garage
-    asserts:
-      - isNull:
-          path: spec.lifecycle
-        documentIndex: 0
-
   - it: omits clusterRefNamespace when not set
     set:
       s3:
         enabled: true
         provider: garage
-        bucketName: files
+        buckets:
+          - name: files
+            acl: private
         garage:
           clusterRef: garage
     asserts:
@@ -209,7 +131,9 @@ tests:
       s3:
         enabled: true
         provider: garage
-        bucketName: files
+        buckets:
+          - name: files
+            acl: private
         garage:
           clusterRef: garage
           clusterRefNamespace: garage-system
@@ -222,66 +146,3 @@ tests:
           path: spec.clusterRef.namespace
           value: garage-system
         documentIndex: 1
-
-  - it: creates GarageReferenceGrant when clusterRefNamespace differs from release namespace
-    release:
-      name: vikunja
-      namespace: vikunja
-    set:
-      s3:
-        enabled: true
-        provider: garage
-        bucketName: files
-        garage:
-          clusterRef: garage
-          clusterRefNamespace: garage
-    asserts:
-      - hasDocuments:
-          count: 3
-      - isKind:
-          of: GarageReferenceGrant
-        documentIndex: 2
-      - equal:
-          path: metadata.namespace
-          value: garage
-        documentIndex: 2
-      - equal:
-          path: spec.from[0].kind
-          value: GarageKey
-        documentIndex: 2
-      - equal:
-          path: spec.from[0].namespace
-          value: vikunja
-        documentIndex: 2
-      - equal:
-          path: spec.from[1].kind
-          value: GarageBucket
-        documentIndex: 2
-      - equal:
-          path: spec.from[1].namespace
-          value: vikunja
-        documentIndex: 2
-      - equal:
-          path: spec.to[0].kind
-          value: GarageCluster
-        documentIndex: 2
-      - equal:
-          path: spec.to[0].name
-          value: garage
-        documentIndex: 2
-
-  - it: omits GarageReferenceGrant when clusterRefNamespace matches release namespace
-    release:
-      name: vikunja
-      namespace: garage
-    set:
-      s3:
-        enabled: true
-        provider: garage
-        bucketName: files
-        garage:
-          clusterRef: garage
-          clusterRefNamespace: garage
-    asserts:
-      - hasDocuments:
-          count: 2

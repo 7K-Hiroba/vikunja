@@ -48,29 +48,23 @@ postgres:
   #    isWALArchiver: false
   #    parameters:
   #      barmanObjectName: ""
-  # -- Backup configuration. Requires an S3 bucket and credentials in a
-  # Secret named `<release>-pg-backup-creds` (keys: ACCESS_KEY_ID,
-  # ACCESS_SECRET_KEY).
+  # -- Backup configuration. Creates an ObjectStore and ScheduledBackup
+  # for the CNPG cluster. Requires an S3 endpoint and a pre-existing Secret
+  # holding the access credentials.
   backup:
     enabled: false
     schedule: "0 2 * * *"
     retentionPolicy: "7d"
+    # -- S3 bucket name for backups. Defaults to `<app>-pg-backups` when empty.
+    bucketName: ""
+    # -- S3 API endpoint for backups.
+    endpoint: ""
     # -- Pre-existing secret containing S3 credentials.
     credentialsSecret:
       name: ""
       accessKeyKey: accessKeyId
       secretKeyKey: secretAccessKey
       regionKey: region
-    garage:
-      clusterRef: garage
-      # -- Namespace of the GarageCluster for backups. Set when the cluster
-      # lives in a different namespace — a GarageReferenceGrant is created
-      # automatically to permit cross-namespace access.
-      clusterRefNamespace: ""
-      endpoint: "http://garage.garage.svc.cluster.local:3900"
-      # -- S3 region. Required by the AWS SDK even for non-AWS endpoints like
-      # Garage. The GarageKey secret includes this as S3_REGION.
-      region: garage
 
 # -- S3-compatible object storage. When enabled, the base chart switches
 # Vikunja from local filesystem storage to S3 — uploaded files go to the
@@ -85,10 +79,6 @@ s3:
   enabled: false
   # -- Provider: "crossplane" | "garage"
   provider: crossplane
-  # -- Bucket name (will be prefixed with the app name).
-  bucketName: files
-  # -- Access control
-  acl: private
 
   # -- Crossplane-specific settings (provider: crossplane)
   crossplane:
@@ -102,16 +92,20 @@ s3:
   garage:
     clusterRef: garage
     # -- Namespace of the GarageCluster. Set when the cluster lives in a
-    # different namespace than this release — a GarageReferenceGrant is
-    # created automatically to permit cross-namespace access.
+    # different namespace than this release.
     clusterRefNamespace: ""
-    # -- S3 endpoint URL. Pass this to the base chart's s3.endpoint value
-    # so Vikunja can reach the Garage API.
-    endpoint: "http://garage.garage.svc.cluster.local:3900"
+    # -- Optional bucket quotas (maxSize, maxObjects)
+    quotas: {}
+    # -- Optional website hosting configuration
+    website: {}
+    # -- Optional bucket lifecycle rules
+    lifecycle: {}
+
   # -- List of S3 buckets to provision. All use the same provider.
-  buckets: []
-  #  - name: files
-  #    acl: private
+  # Each bucket gets a name prefixed with the app name.
+  buckets:
+    - name: files
+      acl: private
 
 # -- Redis-compatible cache / queue resources.
 redis:

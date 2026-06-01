@@ -79,17 +79,6 @@
                 "regionKey": { "type": "string" }
               },
               "additionalProperties": false
-            },
-            "garage": {
-              "type": "object",
-              "properties": {
-                "clusterRef": { "type": "string" },
-                "clusterRefNamespace": { "type": "string" },
-                "endpoint": { "type": "string" },
-                "region": { "type": "string" }
-              },
-              "required": ["clusterRef", "endpoint"],
-              "additionalProperties": false
             }
           },
           "additionalProperties": false
@@ -102,8 +91,6 @@
       "properties": {
         "enabled": { "type": "boolean" },
         "provider": { "type": "string", "enum": ["crossplane", "garage"] },
-        "bucketName": { "type": "string" },
-        "acl": { "type": "string" },
         "crossplane": {
           "type": "object",
           "properties": {
@@ -125,7 +112,6 @@
           "properties": {
             "clusterRef": { "type": "string" },
             "clusterRefNamespace": { "type": "string" },
-            "endpoint": { "type": "string" },
             "quotas": {
               "type": "object",
               "properties": {
