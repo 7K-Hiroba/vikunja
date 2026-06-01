@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/7K-Hiroba/vikunja/compare/helm-base-v1.2.0...helm-base-v1.3.0) (2026-06-01)
+
+
+### Features
+
+* update skeleton version to latest and fix database and env ([6689d24](https://github.com/7K-Hiroba/vikunja/commit/6689d2454260ea492a8e9a79528f2adc8e688904))
+
+
+### Bug Fixes
+
+* add empty dir default to fix non existent path ([886da36](https://github.com/7K-Hiroba/vikunja/commit/886da3655f26825dcb8d18135e71b8770c7064a1))
+
 ## 1.2.0 (2026-06-01)
 
 ## What's Changed

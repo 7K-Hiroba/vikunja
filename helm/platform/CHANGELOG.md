@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/7K-Hiroba/vikunja/compare/helm-platform-v1.2.0...helm-platform-v1.3.0) (2026-06-01)
+
+
+### Features
+
+* update skeleton to latest version ([67bd7f8](https://github.com/7K-Hiroba/vikunja/commit/67bd7f89f4082252e469361bb9416a8ca990e1b2))
+
 ## 1.2.0 (2026-06-01)
 
 ## What's Changed

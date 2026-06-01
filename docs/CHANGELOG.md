@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/7K-Hiroba/vikunja/compare/docs-v1.1.0...docs-v1.2.0) (2026-06-01)
+
+
+### Features
+
+* update skeleton to latest version ([67bd7f8](https://github.com/7K-Hiroba/vikunja/commit/67bd7f89f4082252e469361bb9416a8ca990e1b2))
+
 ## 1.1.0 (2026-05-07)
 
 ## What's Changed
