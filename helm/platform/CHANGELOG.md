@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.0 (2026-06-01)
+
+## What's Changed
+* fix: add bucket region to objectstore to use garage s3 bucket by @joaodss2 in https://github.com/7K-Hiroba/vikunja/pull/17
+* fix(helm-platform): update ghcr.io/cloudnative-pg/postgresql docker tag to v18.4 by @7k-renovate-bot[bot] in https://github.com/7K-Hiroba/vikunja/pull/19
+* feat: update library to latest version by @joaodss2 in https://github.com/7K-Hiroba/vikunja/pull/20
+
+
+**Full Changelog**: https://github.com/7K-Hiroba/vikunja/compare/helm-platform-v1.1.0...helm-platform-v1.2.0
+
 ## 1.1.0 (2026-05-07)
 
 ## What's Changed
