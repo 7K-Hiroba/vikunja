@@ -233,8 +233,16 @@ config:
     #   subPath: "app-config.yaml"
     #   readOnly: true
 
-extraVolumes: []
-extraVolumeMounts: []
+# Writable directory for Vikunja's file storage. Required because the
+# container runs with readOnlyRootFilesystem: true. When using S3, this
+# provides a temporary directory for startup (Vikunja still creates the
+# basepath). When using persistence.claims, override or remove these.
+extraVolumes:
+  - name: files
+    emptyDir: {}
+extraVolumeMounts:
+  - name: files
+    mountPath: /app/vikunja/files
 
 # -- Extra raw Kubernetes resources to deploy. Each entry is a multi-line YAML
 # string (use `|`). Templating is supported.
