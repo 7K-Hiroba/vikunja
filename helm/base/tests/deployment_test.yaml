@@ -100,6 +100,47 @@ tests:
             name: VIKUNJA_LOG_LEVEL
             value: DEBUG
 
+  - it: renders env vars with valueFrom
+    set:
+      env:
+        - name: VIKUNJA_DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: vikunja-pg-app
+              key: password
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: VIKUNJA_DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: vikunja-pg-app
+                key: password
+
+  - it: mounts PVC via persistence.claims
+    set:
+      persistence.claims:
+        - name: files
+          enabled: true
+          size: 5Gi
+          accessMode: ReadWriteOnce
+          mountPath: /app/vikunja/files
+    release:
+      name: test-vikunja
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: persistence-files
+            persistentVolumeClaim:
+              claimName: test-vikunja-files
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: persistence-files
+            mountPath: /app/vikunja/files
+
   - it: renders envFrom when set
     set:
       envFrom:
