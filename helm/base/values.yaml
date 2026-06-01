@@ -115,20 +115,12 @@ podDisruptionBudget:
   minAvailable: 1
   # maxUnavailable: 1
 
-# Persistent storage for Vikunja's uploaded files. When disabled the chart
-# falls back to an emptyDir and uploads are lost on pod restart.
-# Ignored when s3.enabled is true — S3 takes over file storage and this PVC
-# is never created.
+# Persistent storage for Vikunja's uploaded files via the library's
+# persistence.claims mechanism. Each claim creates a PVC and mounts it.
+# When empty and s3.enabled is false, use extraVolumes/extraVolumeMounts
+# with an emptyDir for non-persistent storage.
+# Ignored when s3.enabled is true — S3 takes over file storage.
 persistence:
-  files:
-    enabled: false
-    size: 5Gi
-    accessMode: ReadWriteOnce
-    storageClass: ""
-    # Reuse an existing PVC instead of letting the chart create one.
-    existingClaim: ""
-  # -- Library-native PVC claims (alternative to the custom files block above).
-  # Each entry creates a PVC and mounts it into the workload container.
   claims: []
   # - name: files
   #   enabled: true
@@ -186,6 +178,14 @@ env:
     value: disable
   - name: VIKUNJA_FILES_BASEPATH
     value: /app/vikunja/files
+  # -- Database password from the CNPG-managed Secret. CNPG creates
+  # <cluster>-app (e.g. vikunja-pg-app) with key "password" during bootstrap.
+  # Uncomment when the platform chart has created the cluster.
+  # - name: VIKUNJA_DATABASE_PASSWORD
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: vikunja-pg-app
+  #       key: password
   # -- OpenID Connect authentication. Uncomment and fill in to enable SSO.
   # The client secret is pulled from the platform ExternalSecret via envFrom.
   # - name: VIKUNJA_AUTH_LOCAL_ENABLED
@@ -202,14 +202,6 @@ env:
   #   value: vikunja
   # - name: VIKUNJA_AUTH_OPENID_PROVIDERS_KEYCLOAK_SCOPE
   #   value: "openid profile email"
-
-# Reference the CNPG-managed Secret that holds the auto-generated app-user
-# password. CNPG creates <cluster>-app (e.g. vikunja-pg-app) with key
-# "password" during bootstrap. Leave name empty to skip injecting the env var.
-database:
-  existingPasswordSecret:
-    name: vikunja-pg-app
-    key: password
 
 # Pull non-public values (JWT secret, mailer password) from Secrets.
 envFrom: []
