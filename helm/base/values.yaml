@@ -53,6 +53,20 @@ gateway:
       # sectionName: https
   hostnames:
     - vikunja.example.com
+  # Filters prepended to every rule (e.g. response security headers).
+  # Set to [] to opt out. CSP in particular needs per-deployment tuning.
+  defaultFilters:
+    - type: ResponseHeaderModifier
+      responseHeaderModifier:
+        set:
+          - name: Strict-Transport-Security
+            value: "max-age=63072000; includeSubDomains"
+          - name: X-Content-Type-Options
+            value: nosniff
+          - name: X-Frame-Options
+            value: DENY
+          - name: Referrer-Policy
+            value: strict-origin-when-cross-origin
   # Empty rules → render a default catch-all PathPrefix `/` route.
   rules: []
 
@@ -81,6 +95,10 @@ readinessProbe:
   periodSeconds: 10
   timeoutSeconds: 3
 
+# -- Startup probe. When set, disables liveness and readiness checks until
+# the container starts.
+startupProbe: {}
+
 # Autoscaling is OFF by default. When using PVC storage, only a single
 # replica can mount a ReadWriteOnce volume, so scaling is unsafe.
 # When S3 is enabled instead, file storage is shared and autoscaling works.
@@ -89,6 +107,8 @@ autoscaling:
   minReplicas: 1
   maxReplicas: 10
   targetCPUUtilizationPercentage: 80
+  # -- Workload kind to scale. One of: Deployment, StatefulSet
+  scaleTargetKind: Deployment
 
 podDisruptionBudget:
   enabled: false
@@ -107,6 +127,16 @@ persistence:
     storageClass: ""
     # Reuse an existing PVC instead of letting the chart create one.
     existingClaim: ""
+  # -- Library-native PVC claims (alternative to the custom files block above).
+  # Each entry creates a PVC and mounts it into the workload container.
+  claims: []
+  # - name: files
+  #   enabled: true
+  #   size: 5Gi
+  #   accessMode: ReadWriteOnce
+  #   storageClass: ""
+  #   existingClaim: ""
+  #   mountPath: /app/vikunja/files
 
 # S3-compatible object storage for Vikunja's uploaded files. When enabled,
 # Vikunja reads and writes files from S3 instead of the local filesystem,
@@ -189,5 +219,38 @@ envFrom: []
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+# -- Container args override. When empty, the container uses the image's default CMD.
+args: []
+
+# -- StatefulSet configuration. Only used when the library renders a StatefulSet.
+statefulset:
+  serviceName: ""
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates: []
+
+# -- Mount ConfigMap(s) into the container as files
+config:
+  enabled: false
+  configs: []
+    # -- Name of the ConfigMap to mount. Defaults to fullname + "-app-config" when empty
+    # - configMapName: ""
+    #   mountPath: "/app/app-config.yaml"
+    #   subPath: "app-config.yaml"
+    #   readOnly: true
+
 extraVolumes: []
 extraVolumeMounts: []
+
+# -- Extra raw Kubernetes resources to deploy. Each entry is a multi-line YAML
+# string (use `|`). Templating is supported.
+extraDeploy: []
+# - |
+#   apiVersion: v1
+#   kind: ConfigMap
+#   metadata:
+#     name: {{ include "hiroba-app.fullname" . }}-extra
+#   data:
+#     key: value
