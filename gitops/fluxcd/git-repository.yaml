@@ -1,8 +1,18 @@
+# FluxCD GitRepository source for vikunja.
+#
+# Apply this once to register the app's Git repository as a Flux source.
+# All HelmRelease manifests reference this GitRepository.
+#
+# Usage:
+#   kubectl apply -f gitops/fluxcd/git-repository.yaml
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
   name: vikunja
   namespace: flux-system
+  labels:
+    app.kubernetes.io/name: vikunja
+    app.kubernetes.io/part-of: hiroba
 spec:
   interval: 5m
   url: https://github.com/7K-Hiroba/vikunja.git
