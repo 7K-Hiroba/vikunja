@@ -21,6 +21,17 @@
     },
     {
       customType: 'regex',
+      description: 'Track Hiroba template version in catalog-info.yaml',
+      managerFilePatterns: ['/catalog-info\\.yaml$/'],
+      matchStrings: [
+        'hiroba\\.7kgroup\\.org/template-version:\\s*(?<currentValue>[^\\s]+)',
+      ],
+      depNameTemplate: '7K-Hiroba/Hiroba',
+      datasourceTemplate: 'github-tags',
+      extractVersionTemplate: '^app-template-v(?<version>.+)$',
+    },
+    {
+      customType: 'regex',
       description: 'Track upstream Vikunja image via Chart.yaml appVersion',
       managerFilePatterns: [
         '/helm/(base|platform)/Chart\\.yaml$/',
@@ -48,6 +59,13 @@
       ],
       groupName: 'github-actions',
       semanticCommitType: 'ci',
+    },
+    {
+      description: 'Hiroba template version updates',
+      matchPackageNames: ['7K-Hiroba/Hiroba'],
+      groupName: 'hiroba-template',
+      semanticCommitType: 'fix',
+      semanticCommitScope: 'hiroba',
     },
     {
       description: 'Bump both charts together when upstream Vikunja image moves',

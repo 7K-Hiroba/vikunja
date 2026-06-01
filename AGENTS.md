@@ -34,8 +34,10 @@ This project follows a **near-native** approach. We prefer upstream, official so
 ├── crossplane/                        # Crossplane XRDs & Compositions this app PROVIDES
 │   └── examples/                      # Example Claims for consumers
 ├── gitops/
-│   ├── argocd/                        # ArgoCD Application manifests
-│   └── fluxcd/                        # FluxCD Kustomization manifests
+│   ├── values-base.yaml               # Baseline overrides for helm/base
+│   ├── values-platform.yaml           # Baseline overrides for helm/platform
+│   ├── argocd/                        # ArgoCD Application + AppProject manifests
+│   └── fluxcd/                        # FluxCD GitRepository + HelmRelease manifests
 ├── docs/                              # TechDocs content (published via Backstage)
 ├── .github/workflows/                 # CI/CD — references 7K-Hiroba/workflows-library
 ├── Dockerfile                         # Only if a custom image is maintained
@@ -135,12 +137,18 @@ The scope in the commit message should match the component path or name. Release
 ### Helm
 
 - API version: `apiVersion: v2`
-- All resources use `app.kubernetes.io/*` standard labels via `_helpers.tpl`
+- Template content comes from the `hiroba-app-lib` / `hiroba-platform-lib` library charts declared in `dependencies:` of each `Chart.yaml`. Each `templates/<resource>.yaml` is a thin `{{ include "hiroba-app.<resource>" . }}` (or `hiroba-platform.<resource>`) wrapper. To diverge from the library for a single resource, replace its wrapper file with bespoke YAML.
+- Run `helm dependency update helm/base helm/platform` before linting or rendering locally — CI does this automatically.
+- All resources use `app.kubernetes.io/*` standard labels via the library helpers
 - All resources include `app.kubernetes.io/part-of: hiroba` for traceability
 - Security defaults: `runAsNonRoot: true`, `readOnlyRootFilesystem: true`, all capabilities dropped
 - External traffic uses **Gateway API** (`gateway.networking.k8s.io/v1` HTTPRoute), not Ingress
 - Every chart **must** include a `values.schema.json` — CI will fail without it. Helm lint and template rendering validate values against this schema automatically
 - Every chart **must** include unit tests under `tests/` using [helm-unittest](https://github.com/helm-unittest/helm-unittest). Test files follow the naming convention `<template>_test.yaml`
+
+### Chart icons
+
+When setting the `icon:` field in `Chart.yaml`, look up the application on [selfh.st/icons](https://selfh.st/icons/) and use the SVG URL if available (e.g., `https://cdn.jsdelivr.net/gh/selfhst/icons/svg/<app>.svg`). If the application is not listed there, omit the `icon:` field entirely — do not substitute a generic icon or guess a URL.
 
 ### Values schema conventions
 
@@ -155,16 +163,17 @@ The scope in the commit message should match the component path or name. Release
 - Tests live in `tests/` inside each chart directory
 - One test file per template: `<template>_test.yaml`
 - Each test file declares `suite`, `templates`, and a list of `tests`
-- For platform chart tests, set `capabilities.apiVersions` to satisfy CRD checks in `_checks.yaml`
+- For platform chart tests, set `capabilities.apiVersions` to satisfy the CRD checks invoked by `templates/checks.yaml`
 - Test both the default state (enabled/disabled) and customized values
 - Test conditional rendering (e.g., resource created when enabled, absent when disabled)
+- Run `helm dependency update` for the chart under test before invoking `helm unittest`
 
 ### Platform chart conventions
 
 - Every resource must be gated behind `<resource>.enabled` (default `false`)
 - Resources with multiple backends must use a `<resource>.provider` switch
-- Template files are named `<resource>-<provider>.yaml` inside the appropriate subfolder
-- Use the `platform.name` and `platform.labels` helpers from `_helpers.tpl`
+- Wrapper files are named `<resource>-<provider>.yaml` inside the appropriate subfolder
+- Use the `hiroba-platform.name` and `hiroba-platform.labels` helpers from the library — additions to either helper go in `helm/lib/platform/templates/_helpers.tpl` in the Hiroba repo, not here
 
 ### Container images
 
@@ -230,7 +239,7 @@ Available skills and when they apply:
 | `helm-platform` | Editing `helm/platform/` templates, values, or schema |
 | `cnpg-cluster` | Adding or modifying a CNPG `Cluster` resource |
 | `crossplane-s3` | Adding or modifying S3 storage resources |
-| `garage-s3` | Working with the Garage S3 provider specifically |
+| `garage-s3` | Working with the Garage S3 provider (garage-operator CRDs) specifically |
 | `external-secrets` | Adding or modifying `ExternalSecret` resources |
 | `observability` | Adding or modifying ServiceMonitor, PrometheusRules, or Grafana dashboards |
 | `gitops` | Editing ArgoCD or FluxCD manifests under `gitops/` |
