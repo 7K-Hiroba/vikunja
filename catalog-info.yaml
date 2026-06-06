@@ -8,7 +8,7 @@ metadata:
     github.com/project-slug: 7K-Hiroba/vikunja
     backstage.io/docs-url: https://hiroba.7kgroup.org/vikunja
     backstage.io/techdocs-ref: dir:./docs
-    hiroba.7kgroup.org/template-version: v0.2.0
+    hiroba.7kgroup.org/template-version: 0.2.1
   links:
     - url: https://vikunja.io
       title: Upstream project
